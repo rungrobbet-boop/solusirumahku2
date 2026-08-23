@@ -23,8 +23,9 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
   const [activeTab, setActiveTab] = useState<'brands' | 'types'>(initialMode);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedType, setSelectedType] = useState<string | null>(null);
+  const [showAll, setShowAll] = useState(false);
 
-  const displayedProducts = products.filter((p) => {
+  const allFilteredProducts = products.filter((p) => {
     if (activeTab === 'brands' && selectedBrand) {
       return p.brand.toLowerCase() === selectedBrand.toLowerCase();
     }
@@ -33,6 +34,25 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
     }
     return true;
   });
+
+  const displayedProducts = showAll ? allFilteredProducts : allFilteredProducts.slice(0, 10);
+
+  const handleTabChange = (mode: 'brands' | 'types') => {
+    setActiveTab(mode);
+    setSelectedBrand(null);
+    setSelectedType(null);
+    setShowAll(false);
+  };
+
+  const handleBrandSelect = (brandName: string | null) => {
+    setSelectedBrand(brandName);
+    setShowAll(false);
+  };
+
+  const handleTypeSelect = (typeName: string | null) => {
+    setSelectedType(typeName);
+    setShowAll(false);
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8" id="brand-type-view-container">
@@ -56,10 +76,7 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
           {/* Toggle Buttons */}
           <div className="inline-flex bg-slate-100 p-1 rounded-2xl shrink-0 self-start sm:self-auto">
             <button
-              onClick={() => {
-                setActiveTab('brands');
-                setSelectedType(null);
-              }}
+              onClick={() => handleTabChange('brands')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                 activeTab === 'brands'
                   ? 'bg-[#064e3b] text-white shadow-xs'
@@ -70,10 +87,7 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
               Pilihan Merk
             </button>
             <button
-              onClick={() => {
-                setActiveTab('types');
-                setSelectedBrand(null);
-              }}
+              onClick={() => handleTabChange('types')}
               className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
                 activeTab === 'types'
                   ? 'bg-[#064e3b] text-white shadow-xs'
@@ -90,7 +104,7 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
         {activeTab === 'brands' ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 pt-2">
             <button
-              onClick={() => setSelectedBrand(null)}
+              onClick={() => handleBrandSelect(null)}
               className={`p-3.5 rounded-2xl border text-center transition-all ${
                 selectedBrand === null
                   ? 'border-[#065f46] bg-[#f0fdf4] ring-2 ring-[#065f46]/20'
@@ -108,7 +122,7 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
               return (
                 <button
                   key={brand.id}
-                  onClick={() => setSelectedBrand(isSelected ? null : brand.name)}
+                  onClick={() => handleBrandSelect(isSelected ? null : brand.name)}
                   className={`p-3.5 rounded-2xl border text-left transition-all ${
                     isSelected
                       ? 'border-[#065f46] bg-[#f0fdf4] ring-2 ring-[#065f46]/20'
@@ -132,7 +146,7 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
           /* Types Selector Grid */
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-2">
             <button
-              onClick={() => setSelectedType(null)}
+              onClick={() => handleTypeSelect(null)}
               className={`p-3 rounded-2xl border text-left transition-all ${
                 selectedType === null
                   ? 'border-[#065f46] bg-[#f0fdf4] ring-2 ring-[#065f46]/20'
@@ -150,7 +164,7 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
               return (
                 <button
                   key={type.id}
-                  onClick={() => setSelectedType(isSelected ? null : type.name)}
+                  onClick={() => handleTypeSelect(isSelected ? null : type.name)}
                   className={`p-3 rounded-2xl border text-left transition-all ${
                     isSelected
                       ? 'border-[#065f46] bg-[#f0fdf4] ring-2 ring-[#065f46]/20'
@@ -178,12 +192,13 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
             <strong className="underline">
               {activeTab === 'brands' ? `Merk ${selectedBrand}` : `Tipe ${selectedType}`}
             </strong>{' '}
-            ({displayedProducts.length} produk)
+            ({allFilteredProducts.length} produk)
           </span>
           <button
             onClick={() => {
               setSelectedBrand(null);
               setSelectedType(null);
+              setShowAll(false);
             }}
             className="text-xs font-bold text-rose-600 hover:text-rose-700"
           >
@@ -191,6 +206,11 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
           </button>
         </div>
       )}
+
+      {/* Showing count text */}
+      <div className="flex items-center justify-between text-xs text-slate-700 mb-4 px-1">
+        <span>Menampilkan {displayedProducts.length} dari total {allFilteredProducts.length} produk</span>
+      </div>
 
       {/* Product Results */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
@@ -203,6 +223,23 @@ export const BrandAndTypeView: React.FC<BrandAndTypeViewProps> = ({
           />
         ))}
       </div>
+
+      {/* Lihat Semua Button (if more than 10) */}
+      {allFilteredProducts.length > 10 && (
+        <div className="flex items-center justify-center pt-8">
+          <button
+            onClick={() => setShowAll(!showAll)}
+            className="px-8 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-[#065f46] border-2 border-[#065f46] text-xs sm:text-sm font-extrabold shadow-sm active:scale-98 transition-all flex items-center gap-2"
+            id="btn-brand-type-view-all"
+          >
+            {showAll ? (
+              <span>Tampilkan 10 Produk Saja</span>
+            ) : (
+              <span>Lihat Semua ({allFilteredProducts.length} Produk) &rarr;</span>
+            )}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

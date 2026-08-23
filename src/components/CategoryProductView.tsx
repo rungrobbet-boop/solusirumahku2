@@ -38,8 +38,11 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [availabilityFilter, setAvailabilityFilter] = useState<'all' | 'available' | 'askAdmin'>('all');
   const [sortBy, setSortBy] = useState<'default' | 'priceAsc' | 'priceDesc' | 'favRank'>('default');
+  const [showAllProducts, setShowAllProducts] = useState(false);
 
-  const selectedCategoryObj = categories.find((c) => c.id === selectedCategoryId);
+  // Active category: if null, default to first category
+  const activeCategoryId = selectedCategoryId || (categories.length > 0 ? categories[0].id : null);
+  const selectedCategoryObj = categories.find((c) => c.id === activeCategoryId) || categories[0];
 
   const filteredProducts = useMemo(() => {
     let result = products.filter((prod) => {
@@ -90,6 +93,13 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
     return result;
   }, [products, selectedCategoryObj, selectedBrand, availabilityFilter, searchQuery, sortBy]);
 
+  const displayedProducts = showAllProducts ? filteredProducts : filteredProducts.slice(0, 10);
+
+  const handleSelectCategory = (catId: string) => {
+    setShowAllProducts(false);
+    onSelectCategory(catId);
+  };
+
   return (
     <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8" id="category-product-view">
       {/* Category Header with Dedicated Search */}
@@ -103,7 +113,7 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-black text-[#064e3b] tracking-tight">
-                {selectedCategoryObj ? selectedCategoryObj.name : 'Daftar Semua Kategori & Produk'}
+                {selectedCategoryObj ? selectedCategoryObj.name : 'Daftar Kategori Produk'}
               </h1>
               <p className="text-xs sm:text-sm text-slate-700 mt-0.5">
                 {selectedCategoryObj?.description ||
@@ -118,7 +128,10 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setShowAllProducts(false);
+              }}
               placeholder="Cari dalam kategori ini..."
               className="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-xs sm:text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#065f46] focus:bg-white transition-all"
               id="input-search-category-page"
@@ -134,28 +147,18 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
           </div>
         </div>
 
-        {/* Categories Tab Selector */}
+        {/* Categories Tab Selector (No 'Semua' button as requested) */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none border-t border-slate-100 pt-4">
-          <button
-            onClick={() => onSelectCategory(null)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
-              selectedCategoryId === null
-                ? 'bg-[#064e3b] text-white shadow-xs'
-                : 'bg-slate-100 text-slate-700 hover:bg-[#ecfdf5] hover:text-[#065f46]'
-            }`}
-          >
-            Semua ({products.length})
-          </button>
           {categories.map((cat) => {
             const count = products.filter(
               (p) => p.category.toLowerCase() === cat.name.toLowerCase()
             ).length;
-            const isSelected = selectedCategoryId === cat.id;
+            const isSelected = selectedCategoryObj?.id === cat.id;
             return (
               <button
                 key={cat.id}
-                onClick={() => onSelectCategory(isSelected ? null : cat.id)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                onClick={() => handleSelectCategory(cat.id)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-2 ${
                   isSelected
                     ? 'bg-[#064e3b] text-white shadow-xs'
                     : 'bg-slate-100 text-slate-700 hover:bg-[#ecfdf5] hover:text-[#065f46]'
@@ -186,7 +189,10 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
           {/* Brand select */}
           <select
             value={selectedBrand || ''}
-            onChange={(e) => setSelectedBrand(e.target.value || null)}
+            onChange={(e) => {
+              setSelectedBrand(e.target.value || null);
+              setShowAllProducts(false);
+            }}
             className="text-xs font-medium px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#065f46]"
           >
             <option value="">Semua Merk</option>
@@ -200,7 +206,10 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
           {/* Availability filter */}
           <select
             value={availabilityFilter}
-            onChange={(e) => setAvailabilityFilter(e.target.value as any)}
+            onChange={(e) => {
+              setAvailabilityFilter(e.target.value as any);
+              setShowAllProducts(false);
+            }}
             className="text-xs font-medium px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#065f46]"
           >
             <option value="all">Semua Status Stok</option>
@@ -214,6 +223,7 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
                 setSelectedBrand(null);
                 setAvailabilityFilter('all');
                 setSearchQuery('');
+                setShowAllProducts(false);
               }}
               className="text-xs font-semibold text-rose-600 hover:underline px-2"
             >
@@ -241,6 +251,13 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
         </div>
       </div>
 
+      {/* Showing count indicator */}
+      <div className="flex items-center justify-between text-xs text-slate-700 mb-4 px-1">
+        <span>
+          Menampilkan {displayedProducts.length} dari total {filteredProducts.length} produk dalam kategori <strong>{selectedCategoryObj?.name}</strong>
+        </span>
+      </div>
+
       {/* Product Results Grid */}
       {filteredProducts.length === 0 ? (
         <div className="py-16 text-center bg-white rounded-3xl border border-slate-200 p-8">
@@ -254,23 +271,41 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
               setSearchQuery('');
               setSelectedBrand(null);
               setAvailabilityFilter('all');
-              onSelectCategory(null);
             }}
             className="px-5 py-2.5 rounded-xl bg-[#065f46] text-white text-xs font-bold shadow-xs hover:bg-[#047857] transition-all"
           >
-            Lihat Semua Produk
+            Reset Pencarian
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-          {filteredProducts.map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onSelectProduct={onSelectProduct}
-              onAddToCart={onAddToCart}
-            />
-          ))}
+        <div className="flex flex-col gap-8">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+            {displayedProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onSelectProduct={onSelectProduct}
+                onAddToCart={onAddToCart}
+              />
+            ))}
+          </div>
+
+          {/* Lihat Semua Button (Limit 10 by default) */}
+          {filteredProducts.length > 10 && (
+            <div className="flex items-center justify-center pt-2">
+              <button
+                onClick={() => setShowAllProducts(!showAllProducts)}
+                className="px-8 py-3.5 rounded-2xl bg-white hover:bg-slate-50 text-[#065f46] border-2 border-[#065f46] text-xs sm:text-sm font-extrabold shadow-sm active:scale-98 transition-all flex items-center gap-2"
+                id="btn-category-view-all"
+              >
+                {showAllProducts ? (
+                  <span>Tampilkan 10 Produk Saja</span>
+                ) : (
+                  <span>Lihat Semua ({filteredProducts.length} Produk) &rarr;</span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

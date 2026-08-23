@@ -113,7 +113,7 @@ export function generateWhatsAppOrderMessage(
   buyerData: {
     name: string;
     phone: string;
-    address: string;
+    address?: string;
     notes?: string;
   },
   storeName = 'Solusi Rumahku'
@@ -131,9 +131,12 @@ export function generateWhatsAppOrderMessage(
     const itemPrice = item.product.discountPrice || item.product.price;
     const subtotal = itemPrice * item.quantity;
     const stockInfo = getStockStatus(item.product.stockCount).label;
+    const packingInfo = item.product.packingQuantity && item.product.packingUnit 
+      ? ` [Kemasan: ${item.product.packingQuantity} ${item.product.packingUnit}]`
+      : '';
 
     message += `*${index + 1}. ${item.product.name}*\n`;
-    message += `   • Merk / Tipe: ${item.product.brand} | ${item.product.type}\n`;
+    message += `   • Merk / Tipe: ${item.product.brand} | ${item.product.type}${packingInfo}\n`;
     message += `   • Status: ${stockInfo}\n`;
     message += `   • Jumlah: ${item.quantity} x ${formatRupiah(itemPrice)} = *${formatRupiah(subtotal)}*\n`;
     if (item.notes) {
@@ -148,7 +151,9 @@ export function generateWhatsAppOrderMessage(
   message += `*DATA PEMESAN:*\n`;
   message += `• Nama: ${buyerData.name || '-'}\n`;
   message += `• No. HP/WA: ${buyerData.phone || '-'}\n`;
-  message += `• Alamat Kirim / Lokasi: ${buyerData.address || '-'}\n`;
+  if (buyerData.address) {
+    message += `• Alamat Kirim / Lokasi: ${buyerData.address}\n`;
+  }
   if (buyerData.notes) {
     message += `• Catatan Tambahan: ${buyerData.notes}\n`;
   }
@@ -169,11 +174,17 @@ export function generateWhatsAppSingleProductMessage(
   const price = product.discountPrice || product.price;
   const subtotal = price * quantity;
   const stockInfo = getStockStatus(product.stockCount).label;
+  const packingInfo = product.packingQuantity && product.packingUnit 
+    ? `${product.packingQuantity} ${product.packingUnit}`
+    : null;
 
   let message = `*HALO ${storeName.toUpperCase()}*, SAYA INGIN MEMESAN LANGSUNG PRODUK BERIKUT:\n\n`;
   message += `*• Nama Produk:* ${product.name}\n`;
   message += `*• Merk / Tipe:* ${product.brand} | ${product.type}\n`;
   message += `*• Kategori:* ${product.category}\n`;
+  if (packingInfo) {
+    message += `*• Isi per Kemasan (Packing):* ${packingInfo}\n`;
+  }
   message += `*• Status Stok:* ${stockInfo}\n`;
   message += `*• Harga Satuan:* ${formatRupiah(price)}\n`;
   message += `*• Jumlah Pesanan:* ${quantity} unit\n`;

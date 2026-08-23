@@ -20,7 +20,7 @@ interface CartModalProps {
   onUpdateCart: (newCart: CartItem[]) => void;
   onCheckout: (
     items: CartItem[],
-    customerInfo: { name: string; phone: string; address: string; notes?: string }
+    customerInfo: { name: string; phone: string; address?: string; notes?: string }
   ) => void;
 }
 
@@ -33,7 +33,6 @@ export const CartModal: React.FC<CartModalProps> = ({
 }) => {
   const [buyerName, setBuyerName] = useState('');
   const [buyerPhone, setBuyerPhone] = useState('');
-  const [buyerAddress, setBuyerAddress] = useState('');
   const [buyerNotes, setBuyerNotes] = useState('');
 
   if (!isOpen) return null;
@@ -70,7 +69,7 @@ export const CartModal: React.FC<CartModalProps> = ({
     onCheckout(cartItems, {
       name: buyerName,
       phone: buyerPhone,
-      address: buyerAddress,
+      address: '',
       notes: buyerNotes,
     });
   };
@@ -252,14 +251,14 @@ export const CartModal: React.FC<CartModalProps> = ({
 
                 <div>
                   <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                    Alamat Kirim / Lokasi Proyek
+                    Catatan Tambahan (Opsional)
                   </label>
-                  <textarea
-                    rows={2}
-                    value={buyerAddress}
-                    onChange={(e) => setBuyerAddress(e.target.value)}
-                    placeholder="Alamat lengkap tujuan pengiriman barang..."
-                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#065f46] resize-none"
+                  <input
+                    type="text"
+                    value={buyerNotes}
+                    onChange={(e) => setBuyerNotes(e.target.value)}
+                    placeholder="Contoh: Tolong packing kayu / kirim sebelum jam 3 sore..."
+                    className="w-full text-xs px-3 py-2 rounded-xl border border-slate-300 bg-white focus:outline-none focus:ring-2 focus:ring-[#065f46]"
                   />
                 </div>
               </div>

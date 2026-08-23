@@ -9,29 +9,29 @@ interface LogoProps {
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
-  size = 'md',
+  size = 'lg',
   showText = true,
   textClassName = '',
 }) => {
   const sizeMap = {
-    sm: 'w-9 h-9',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-    xl: 'w-24 h-24',
+    sm: 'w-10 h-10',
+    md: 'w-14 h-14',
+    lg: 'w-18 h-18',
+    xl: 'w-28 h-28',
   };
 
   const iconSizeMap = {
-    sm: 36,
-    md: 48,
-    lg: 64,
-    xl: 96,
+    sm: 40,
+    md: 56,
+    lg: 72,
+    xl: 112,
   };
 
   const px = iconSizeMap[size];
 
   return (
-    <div className={`inline-flex items-center gap-2.5 select-none ${className}`} id="brand-logo-container">
-      <div className={`relative shrink-0 flex items-center justify-center rounded-full bg-white shadow-xs ring-1 ring-[#065f46]/20 p-1 ${sizeMap[size]}`}>
+    <div className={`inline-flex items-center gap-3 select-none ${className}`} id="brand-logo-container">
+      <div className={`relative shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#065f46]/20 p-1.5 ${sizeMap[size]}`}>
         <svg
           width={px}
           height={px}
@@ -132,17 +132,12 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
 
       {showText && (
-        <div className={`flex flex-col ${textClassName}`}>
-          <div className="flex items-baseline gap-1">
-            <span className="font-extrabold tracking-tight text-[#064e3b] text-lg sm:text-xl uppercase font-sans">
-              SOLUSI
-            </span>
-            <span className="font-black tracking-tight text-[#0f5145] text-lg sm:text-xl uppercase font-sans">
-              RUMAHKU
-            </span>
-          </div>
-          <span className="text-[10px] sm:text-xs font-semibold tracking-wider text-[#15803d] uppercase -mt-1">
-            Toko Online Listrik & Tehnik
+        <div className={`flex items-baseline gap-1.5 ${textClassName}`}>
+          <span className="font-extrabold tracking-tight text-[#064e3b] text-xl sm:text-2xl lg:text-3xl uppercase font-sans">
+            SOLUSI
+          </span>
+          <span className="font-black tracking-tight text-[#0f5145] text-xl sm:text-2xl lg:text-3xl uppercase font-sans">
+            RUMAHKU
           </span>
         </div>
       )}

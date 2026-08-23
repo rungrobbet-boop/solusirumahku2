@@ -34,15 +34,11 @@ export const Footer: React.FC<FooterProps> = ({
   return (
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800/80 pt-12 pb-8 mt-16" id="app-footer">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 pb-10 border-b border-slate-800/80">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 pb-10 border-b border-slate-800/80">
           {/* Brand Col */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
               <Logo size="md" />
-              <div>
-                <h3 className="text-base font-black text-white">{settings.storeName}</h3>
-                <p className="text-[11px] text-emerald-400 font-semibold">{settings.tagline}</p>
-              </div>
             </div>
 
             <p className="text-xs text-slate-400 leading-relaxed max-w-sm">
@@ -52,10 +48,11 @@ export const Footer: React.FC<FooterProps> = ({
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={onOpenWhatsApp}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold shadow-xs transition-colors"
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#065f46] hover:bg-[#047857] text-white text-xs font-bold shadow-xs transition-colors"
+                title="Hubungi CS WhatsApp"
               >
                 <MessageCircle className="w-4 h-4" />
-                Chat WhatsApp CS
+                <span>WhatsApp CS</span>
               </button>
             </div>
           </div>
@@ -103,51 +100,36 @@ export const Footer: React.FC<FooterProps> = ({
                   onClick={() => onNavigateTab('about')}
                   className="hover:text-emerald-400 transition-colors text-slate-400 hover:underline"
                 >
-                  Tentang Kami & Kontak
+                  Tentang Kami
+                </button>
+              </li>
+              <li>
+                <button
+                  onClick={() => onNavigateTab('contact')}
+                  className="hover:text-emerald-400 transition-colors text-slate-400 hover:underline"
+                >
+                  Hubungi Kami
                 </button>
               </li>
             </ul>
           </div>
 
-          {/* Categories Quick Links */}
-          <div className="space-y-3">
-            <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">
-              Kategori Terpopuler
-            </h4>
-            <ul className="space-y-1.5 text-xs">
-              {categories.slice(0, 6).map((cat) => (
-                <li key={cat.id}>
-                  <button
-                    onClick={() => {
-                      onNavigateTab('categories');
-                      onSelectCategory(cat.id);
-                    }}
-                    className="hover:text-emerald-400 transition-colors text-slate-400 line-clamp-1 text-left"
-                  >
-                    {cat.name}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Contact Details */}
+          {/* Contact & Operational Info (Strict: Phone & Senin - Sabtu kecuali hari libur) */}
           <div className="space-y-3">
             <h4 className="text-xs font-extrabold uppercase tracking-wider text-white">
               Kontak & Operasional
             </h4>
-            <div className="space-y-2 text-xs text-slate-400">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />
-                <span>{settings.address}, {settings.city}</span>
+            <div className="space-y-2.5 text-xs text-slate-400">
+              <div className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span className="font-semibold text-slate-200">+{cleanPhoneNumber(settings.phoneWhatsApp)}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>+{cleanPhoneNumber(settings.phoneWhatsApp)}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span>{settings.businessHours}</span>
+              <div className="flex items-start gap-2.5">
+                <Clock className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-slate-200">Senin - Sabtu (Kecuali Hari Libur)</span>
+                  <span className="text-[11px] text-slate-400 mt-0.5">08.00 - 17.00 WIB</span>
+                </div>
               </div>
             </div>
           </div>

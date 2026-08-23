@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   X,
   Lock,
@@ -26,6 +26,12 @@ import {
   LogOut,
   Sliders,
   Sparkles,
+  Search,
+  Download,
+  Upload,
+  ArrowUp,
+  ArrowDown,
+  FileSpreadsheet,
 } from 'lucide-react';
 import {
   Product,
@@ -45,6 +51,7 @@ import {
 } from '../../services/storageService';
 import { appwriteService } from '../../services/appwriteService';
 import { formatRupiah, getStockStatus } from '../../utils/formatters';
+import { exportProductsToCSV, parseProductsCSV } from '../../utils/csvHelper';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -101,10 +108,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   // Editing state for products
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
+
+  // CSV Import Modal state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [importCsvText, setImportCsvText] = useState('');
+  const [importMode, setImportMode] = useState<'merge' | 'replace'>('merge');
+  const [importError, setImportError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Editing state for category
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null);
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
+  // Editing state for Brands
+  const [editingBrand, setEditingBrand] = useState<BrandItem | null>(null);
+  const [isCreatingBrand, setIsCreatingBrand] = useState(false);
+
+  // Editing state for Product Types
+  const [editingProductType, setEditingProductType] = useState<ProductTypeItem | null>(null);
+  const [isCreatingProductType, setIsCreatingProductType] = useState(false);
 
   // Editing state for Info & Trend
   const [editingInfo, setEditingInfo] = useState<InfoTrendItem | null>(null);
@@ -765,36 +788,82 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <div>
                       <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Produk Detail</h2>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Tambah, edit, upload hingga 5 gambar, atur 1 gambar utama, set favorit 1-20, dan isi jumlah stok.
+                        Tambah, edit, cari, upload gambar, satuan packing, serta export/import massal Google Sheets / CSV.
                       </p>
                     </div>
-                    <button
-                      onClick={() => {
-                        setEditingProduct({
-                          id: `prod-${Date.now()}`,
-                          name: '',
-                          brand: brands[0]?.name || 'Philips',
-                          category: categories[0]?.name || 'PHILIPS LED',
-                          type: productTypes[0]?.name || 'Bohlam LED',
-                          price: 50000,
-                          discountPrice: undefined,
-                          stockCount: 10,
-                          mainImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600',
-                          images: ['https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600'],
-                          description: '',
-                          specifications: { 'Garansi': 'Resmi Toko', 'Standar': 'SNI' },
-                          isFavoriteMonthRank: null,
-                          isLatest: false,
-                          createdAt: new Date().toISOString(),
-                          updatedAt: new Date().toISOString(),
-                        });
-                        setIsCreatingProduct(true);
-                      }}
-                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Tambah Produk Baru
-                    </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => exportProductsToCSV(products)}
+                        className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5"
+                        title="Export semua produk ke file CSV (Kompatibel dengan Google Sheets / Excel)"
+                      >
+                        <Download className="w-4 h-4 text-emerald-400" />
+                        Export CSV
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setImportCsvText('');
+                          setImportError('');
+                          setIsImportModalOpen(true);
+                        }}
+                        className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5"
+                        title="Import produk massal dari file CSV / Google Sheets"
+                      >
+                        <Upload className="w-4 h-4 text-sky-400" />
+                        Import CSV
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          setEditingProduct({
+                            id: `prod-${Date.now()}`,
+                            name: '',
+                            brand: brands[0]?.name || 'Philips',
+                            category: categories[0]?.name || 'PHILIPS LED',
+                            type: productTypes[0]?.name || 'Bohlam LED',
+                            price: 50000,
+                            discountPrice: undefined,
+                            stockCount: 10,
+                            packingQuantity: undefined,
+                            packingUnit: 'Pcs',
+                            mainImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600',
+                            images: ['https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600'],
+                            description: '',
+                            specifications: { 'Garansi': 'Resmi Toko', 'Standar': 'SNI' },
+                            isFavoriteMonthRank: null,
+                            isLatest: false,
+                            createdAt: new Date().toISOString(),
+                            updatedAt: new Date().toISOString(),
+                          });
+                          setIsCreatingProduct(true);
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5"
+                      >
+                        <Plus className="w-4 h-4" />
+                        Tambah Produk Baru
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search Bar for Products in Admin */}
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={productSearchQuery}
+                      onChange={(e) => setProductSearchQuery(e.target.value)}
+                      placeholder="Cari produk berdasarkan nama, merk, kategori, atau tipe..."
+                      className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    />
+                    {productSearchQuery && (
+                      <button
+                        onClick={() => setProductSearchQuery('')}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
                   </div>
 
                   {/* Product Form Modal / Editor */}
@@ -878,6 +947,44 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
                             placeholder="Biarkan kosong jika tidak ada diskon"
                           />
+                        </div>
+
+                        {/* Satuan Packing (Grosir / Per Kemasan) - Request 15 */}
+                        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div>
+                            <label className="font-bold text-emerald-300 block mb-1">
+                              Jumlah Satuan per Packing (Kemasan / Grosir)
+                            </label>
+                            <input
+                              type="number"
+                              value={editingProduct.packingQuantity || ''}
+                              onChange={(e) =>
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  packingQuantity: e.target.value ? Number(e.target.value) : undefined,
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-600 text-white font-mono"
+                              placeholder="Contoh: 10, 50, 100 (kosongkan jika eceran)"
+                            />
+                          </div>
+                          <div>
+                            <label className="font-bold text-emerald-300 block mb-1">
+                              Satuan Packing
+                            </label>
+                            <input
+                              type="text"
+                              value={editingProduct.packingUnit || ''}
+                              onChange={(e) =>
+                                setEditingProduct({
+                                  ...editingProduct,
+                                  packingUnit: e.target.value || undefined,
+                                })
+                              }
+                              className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-600 text-white"
+                              placeholder="Contoh: Pieces (Pcs), Slop, Roll, Pack, Dus, Meter, Lusin"
+                            />
+                          </div>
                         </div>
 
                         {/* Stok Konfigurasi (Tersedia vs Tanya Admin) */}
@@ -1072,77 +1179,242 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             <th className="p-3">Nama & Merk</th>
                             <th className="p-3">Kategori</th>
                             <th className="p-3">Harga</th>
+                            <th className="p-3">Packing</th>
                             <th className="p-3">Status Stok</th>
                             <th className="p-3">Favorit #</th>
                             <th className="p-3 text-right">Aksi</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800">
-                          {products.map((p) => {
-                            const status = getStockStatus(p.stockCount);
-                            return (
-                              <tr key={p.id} className="hover:bg-slate-800/40">
-                                <td className="p-3">
-                                  <img
-                                    src={p.mainImage}
-                                    alt={p.name}
-                                    className="w-10 h-10 rounded-lg object-cover bg-slate-900 border border-slate-700"
-                                  />
-                                </td>
-                                <td className="p-3 font-semibold text-white max-w-xs truncate" title={p.name}>
-                                  <div>{p.name}</div>
-                                  <span className="text-[10px] text-emerald-400 font-normal">{p.brand} &bull; {p.type}</span>
-                                </td>
-                                <td className="p-3">{p.category}</td>
-                                <td className="p-3 font-bold text-white">{formatRupiah(p.discountPrice || p.price)}</td>
-                                <td className="p-3">
-                                  <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                                      status.isAvailable ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
-                                    }`}
-                                  >
-                                    {status.label} {typeof p.stockCount === 'number' && `(${p.stockCount})`}
-                                  </span>
-                                </td>
-                                <td className="p-3">
-                                  {p.isFavoriteMonthRank ? (
-                                    <span className="text-amber-400 font-bold">#{p.isFavoriteMonthRank}</span>
-                                  ) : (
-                                    '-'
-                                  )}
-                                </td>
-                                <td className="p-3 text-right">
-                                  <div className="inline-flex items-center gap-1.5">
-                                    <button
-                                      onClick={() => {
-                                        setEditingProduct(p);
-                                        setIsCreatingProduct(false);
-                                      }}
-                                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
-                                      title="Edit"
+                          {products
+                            .filter((p) => {
+                              if (!productSearchQuery.trim()) return true;
+                              const q = productSearchQuery.toLowerCase().trim();
+                              return (
+                                p.name.toLowerCase().includes(q) ||
+                                p.brand.toLowerCase().includes(q) ||
+                                p.category.toLowerCase().includes(q) ||
+                                p.type.toLowerCase().includes(q)
+                              );
+                            })
+                            .map((p) => {
+                              const status = getStockStatus(p.stockCount);
+                              return (
+                                <tr key={p.id} className="hover:bg-slate-800/40">
+                                  <td className="p-3">
+                                    <img
+                                      src={p.mainImage}
+                                      alt={p.name}
+                                      className="w-10 h-10 rounded-lg object-cover bg-slate-900 border border-slate-700"
+                                    />
+                                  </td>
+                                  <td className="p-3 font-semibold text-white max-w-xs truncate" title={p.name}>
+                                    <div>{p.name}</div>
+                                    <span className="text-[10px] text-emerald-400 font-normal">{p.brand} &bull; {p.type}</span>
+                                  </td>
+                                  <td className="p-3">{p.category}</td>
+                                  <td className="p-3 font-bold text-white">{formatRupiah(p.discountPrice || p.price)}</td>
+                                  <td className="p-3">
+                                    {p.packingQuantity && p.packingUnit ? (
+                                      <span className="text-[11px] font-semibold text-amber-300">
+                                        {p.packingQuantity} {p.packingUnit}
+                                      </span>
+                                    ) : (
+                                      <span className="text-slate-500">-</span>
+                                    )}
+                                  </td>
+                                  <td className="p-3">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                        status.isAvailable ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'
+                                      }`}
                                     >
-                                      <Edit className="w-3.5 h-3.5" />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        if (confirm(`Hapus produk "${p.name}"?`)) {
-                                          const updated = storage.deleteProduct(p.id);
-                                          setProducts(updated);
-                                          showSuccessFeedback('Produk dihapus.');
-                                        }
-                                      }}
-                                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-rose-400"
-                                      title="Hapus"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                </td>
-                              </tr>
-                            );
-                          })}
+                                      {status.label} {typeof p.stockCount === 'number' && `(${p.stockCount})`}
+                                    </span>
+                                  </td>
+                                  <td className="p-3">
+                                    {p.isFavoriteMonthRank ? (
+                                      <span className="text-amber-400 font-bold">#{p.isFavoriteMonthRank}</span>
+                                    ) : (
+                                      '-'
+                                    )}
+                                  </td>
+                                  <td className="p-3 text-right">
+                                    <div className="inline-flex items-center gap-1.5">
+                                      <button
+                                        onClick={() => {
+                                          setEditingProduct(p);
+                                          setIsCreatingProduct(false);
+                                        }}
+                                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                        title="Edit"
+                                      >
+                                        <Edit className="w-3.5 h-3.5" />
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          if (confirm(`Hapus produk "${p.name}"?`)) {
+                                            const updated = storage.deleteProduct(p.id);
+                                            setProducts(updated);
+                                            showSuccessFeedback('Produk dihapus.');
+                                          }
+                                        }}
+                                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-rose-400"
+                                        title="Hapus"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* CSV Import Modal */}
+              {isImportModalOpen && (
+                <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+                  <div className="bg-slate-900 border border-slate-700 rounded-3xl p-6 w-full max-w-2xl text-slate-200 shadow-2xl space-y-4">
+                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <FileSpreadsheet className="w-5 h-5 text-emerald-400" />
+                        Import Data Produk (Google Sheets / CSV)
+                      </h3>
+                      <button
+                        onClick={() => setIsImportModalOpen(false)}
+                        className="text-slate-400 hover:text-white"
+                      >
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <div className="text-xs text-slate-300 space-y-2">
+                      <p>
+                        Anda dapat mengupload file <strong>.csv</strong> atau menempelkan (paste) data CSV langsung dari <strong>Google Sheets / Excel</strong>.
+                      </p>
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-[11px] text-slate-400">
+                        Format kolom didukung: <code>ID, Nama Produk, Merk, Kategori, Tipe, Harga Normal, Harga Diskon, Jumlah Stok, Jumlah Packing, Satuan Packing, Produk Terbaru, Peringkat Favorit, URL Gambar Utama, Deskripsi Produk</code>
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 text-xs">
+                      <div className="flex items-center justify-between">
+                        <label className="font-bold text-white">Upload File CSV:</label>
+                        <input
+                          type="file"
+                          accept=".csv"
+                          ref={fileInputRef}
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onload = (event) => {
+                                const text = event.target?.result as string;
+                                setImportCsvText(text);
+                              };
+                              reader.readAsText(file);
+                            }
+                          }}
+                          className="text-xs text-slate-400 file:mr-2 file:py-1 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-emerald-700 file:text-white hover:file:bg-emerald-600 cursor-pointer"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-white block mb-1">
+                          Atau Tempel (Paste) Teks CSV di bawah ini:
+                        </label>
+                        <textarea
+                          rows={6}
+                          value={importCsvText}
+                          onChange={(e) => setImportCsvText(e.target.value)}
+                          placeholder="Paste baris CSV dari Google Sheets atau file di sini..."
+                          className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-white font-mono text-[11px] focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-bold text-white block mb-1">Metode Penggabungan:</label>
+                        <div className="flex items-center gap-4">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="importMode"
+                              checked={importMode === 'merge'}
+                              onChange={() => setImportMode('merge')}
+                              className="text-emerald-500"
+                            />
+                            <span>Gabungkan / Update Produk (Merge & Update)</span>
+                          </label>
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="radio"
+                              name="importMode"
+                              checked={importMode === 'replace'}
+                              onChange={() => setImportMode('replace')}
+                              className="text-emerald-500"
+                            />
+                            <span>Ganti Seluruh Produk (Replace All)</span>
+                          </label>
+                        </div>
+                      </div>
+
+                      {importError && (
+                        <p className="text-xs text-rose-400 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20">
+                          {importError}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-end gap-2 border-t border-slate-800 pt-3">
+                      <button
+                        type="button"
+                        onClick={() => setIsImportModalOpen(false)}
+                        className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold hover:bg-slate-700"
+                      >
+                        Batal
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!importCsvText.trim()) {
+                            setImportError('Silakan pilih file atau tempelkan teks CSV terlebih dahulu.');
+                            return;
+                          }
+                          try {
+                            const parsed = parseProductsCSV(importCsvText) as Product[];
+                            if (parsed.length === 0) {
+                              setImportError('Tidak ada data produk yang berhasil dibaca dari CSV. Periksa format kolom.');
+                              return;
+                            }
+
+                            let updatedList: Product[];
+                            if (importMode === 'replace') {
+                              updatedList = parsed;
+                            } else {
+                              const existingMap = new Map<string, Product>();
+                              products.forEach((p) => existingMap.set(p.id, p));
+                              parsed.forEach((p) => existingMap.set(p.id, p));
+                              updatedList = Array.from(existingMap.values());
+                            }
+
+                            storage.saveProducts(updatedList);
+                            setProducts(updatedList);
+                            setIsImportModalOpen(false);
+                            showSuccessFeedback(`Berhasil mengimpor ${parsed.length} data produk!`);
+                          } catch (err: any) {
+                            setImportError(`Gagal membaca CSV: ${err.message || 'Format tidak valid'}`);
+                          }
+                        }}
+                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Proses Import Data
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1155,7 +1427,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <div>
                       <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Kategori Produk</h2>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        Kelola 12 kategori utama, ubah logo gambar URL/file dan deskripsi kategori.
+                        Kelola kategori utama, urutkan posisi (naik/turun), edit logo/deskripsi, dan hapus kategori.
                       </p>
                     </div>
                     <button
@@ -1180,7 +1452,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                   {editingCategory && (
                     <div className="p-6 rounded-3xl bg-slate-800 border-2 border-emerald-500/50 shadow-xl space-y-4 text-xs">
-                      <h3 className="text-sm font-bold text-white">Edit / Tambah Kategori</h3>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Layers className="w-4 h-4 text-emerald-400" />
+                        {isCreatingCategory ? 'Tambah Kategori Baru' : `Edit Kategori: ${editingCategory.name}`}
+                      </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                           <label className="font-semibold text-slate-300 block mb-1">Nama Kategori</label>
@@ -1198,12 +1473,31 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           />
                         </div>
                         <div>
-                          <label className="font-semibold text-slate-300 block mb-1">Logo / Gambar Kategori (URL)</label>
+                          <label className="font-semibold text-slate-300 block mb-1">Logo / Gambar Kategori (URL atau Upload)</label>
                           <input
                             type="text"
                             value={editingCategory.logoUrl || ''}
                             onChange={(e) => setEditingCategory({ ...editingCategory, logoUrl: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white mb-2"
+                            placeholder="URL gambar..."
+                          />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  setEditingCategory({
+                                    ...editingCategory,
+                                    logoUrl: reader.result as string,
+                                  });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="text-[11px] text-slate-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-emerald-700 file:text-white hover:file:bg-emerald-600 cursor-pointer"
                           />
                         </div>
                         <div className="sm:col-span-2">
@@ -1216,11 +1510,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           />
                         </div>
                       </div>
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
                         <button
                           type="button"
-                          onClick={() => setEditingCategory(null)}
-                          className="px-3 py-1.5 rounded-lg bg-slate-700 text-slate-300"
+                          onClick={() => {
+                            setEditingCategory(null);
+                            setIsCreatingCategory(false);
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-slate-700 text-slate-300 font-medium"
                         >
                           Batal
                         </button>
@@ -1231,6 +1528,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             const updated = storage.saveCategory(editingCategory);
                             setCategories(updated);
                             setEditingCategory(null);
+                            setIsCreatingCategory(false);
                             showSuccessFeedback('Kategori berhasil disimpan!');
                           }}
                           className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"
@@ -1242,44 +1540,93 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   )}
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {categories.map((c) => (
+                    {categories.map((c, index) => (
                       <div
                         key={c.id}
                         className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <span className="w-5 h-5 rounded-full bg-slate-900 text-slate-400 text-[10px] font-bold flex items-center justify-center shrink-0">
+                            {index + 1}
+                          </span>
                           <img
                             src={c.logoUrl || 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=200'}
                             alt={c.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-slate-600"
+                            className="w-10 h-10 rounded-xl object-cover border border-slate-600 shrink-0 bg-slate-900"
                           />
-                          <div>
-                            <strong className="text-white text-xs block">{c.name}</strong>
+                          <div className="min-w-0">
+                            <strong className="text-white text-xs block truncate">{c.name}</strong>
                             <span className="text-[10px] text-slate-400 line-clamp-1">{c.description}</span>
                           </div>
                         </div>
-                        <button
-                          onClick={() => setEditingCategory(c)}
-                          className="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"
-                        >
-                          <Edit className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              {/* 4. KELOLA MERK & TYPE PRODUK */}
-              {activeTab === 'brands' && (
-                <div className="space-y-6">
-                  <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Merk Dagang</h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                    {brands.map((b) => (
-                      <div key={b.id} className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between">
-                        <div>
-                          <strong className="text-white text-sm block">{b.name}</strong>
-                          <span className="text-xs text-slate-400">{b.description}</span>
+                        {/* Reorder & Action Buttons */}
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            disabled={index === 0}
+                            onClick={() => {
+                              if (index === 0) return;
+                              const next = [...categories];
+                              const temp = next[index - 1];
+                              next[index - 1] = next[index];
+                              next[index] = temp;
+                              storage.saveCategories(next);
+                              setCategories(next);
+                              showSuccessFeedback(`Posisi "${c.name}" dipindahkan ke atas.`);
+                            }}
+                            className={`p-1.5 rounded-lg ${
+                              index === 0
+                                ? 'text-slate-600 cursor-not-allowed'
+                                : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                            }`}
+                            title="Geser ke Atas"
+                          >
+                            <ArrowUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            disabled={index === categories.length - 1}
+                            onClick={() => {
+                              if (index === categories.length - 1) return;
+                              const next = [...categories];
+                              const temp = next[index + 1];
+                              next[index + 1] = next[index];
+                              next[index] = temp;
+                              storage.saveCategories(next);
+                              setCategories(next);
+                              showSuccessFeedback(`Posisi "${c.name}" dipindahkan ke bawah.`);
+                            }}
+                            className={`p-1.5 rounded-lg ${
+                              index === categories.length - 1
+                                ? 'text-slate-600 cursor-not-allowed'
+                                : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                            }`}
+                            title="Geser ke Bawah"
+                          >
+                            <ArrowDown className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingCategory(c);
+                              setIsCreatingCategory(false);
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"
+                            title="Edit"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Hapus kategori "${c.name}"?`)) {
+                                const updated = storage.deleteCategory(c.id);
+                                setCategories(updated);
+                                showSuccessFeedback('Kategori dihapus.');
+                              }
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-700 hover:bg-rose-900/50 text-rose-400"
+                            title="Hapus"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -1287,14 +1634,281 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 </div>
               )}
 
+              {/* 4. KELOLA MERK DAGANG */}
+              {activeTab === 'brands' && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Merk Dagang</h2>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Tambah, ubah nama, deskripsi, logo, atau hapus merk produk toko secara manual.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setEditingBrand({
+                          id: `brand-${Date.now()}`,
+                          name: '',
+                          slug: '',
+                          description: '',
+                          logoUrl: '',
+                        });
+                        setIsCreatingBrand(true);
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Tambah Merk Baru
+                    </button>
+                  </div>
+
+                  {editingBrand && (
+                    <div className="p-6 rounded-3xl bg-slate-800 border-2 border-emerald-500/50 shadow-xl space-y-4 text-xs">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-emerald-400" />
+                        {isCreatingBrand ? 'Tambah Merk Baru' : `Edit Merk: ${editingBrand.name}`}
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">Nama Merk</label>
+                          <input
+                            type="text"
+                            value={editingBrand.name}
+                            onChange={(e) =>
+                              setEditingBrand({
+                                ...editingBrand,
+                                name: e.target.value,
+                                slug: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            placeholder="Contoh: Philips, Panasonic, Broco"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">Logo / Gambar Merk (URL)</label>
+                          <input
+                            type="text"
+                            value={editingBrand.logoUrl || ''}
+                            onChange={(e) => setEditingBrand({ ...editingBrand, logoUrl: e.target.value })}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            placeholder="https://..."
+                          />
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="font-semibold text-slate-300 block mb-1">Deskripsi Merk</label>
+                          <input
+                            type="text"
+                            value={editingBrand.description || ''}
+                            onChange={(e) => setEditingBrand({ ...editingBrand, description: e.target.value })}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            placeholder="Deskripsi keunggulan merk..."
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingBrand(null);
+                            setIsCreatingBrand(false);
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-slate-700 text-slate-300 font-medium"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!editingBrand.name.trim()) return;
+                            const updated = storage.saveBrand(editingBrand);
+                            setBrands(updated);
+                            setEditingBrand(null);
+                            setIsCreatingBrand(false);
+                            showSuccessFeedback('Merk berhasil disimpan!');
+                          }}
+                          className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"
+                        >
+                          Simpan Merk
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {brands.map((b) => (
+                      <div key={b.id} className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <strong className="text-white text-sm block truncate">{b.name}</strong>
+                          <span className="text-xs text-slate-400 line-clamp-1">{b.description || 'Tidak ada deskripsi'}</span>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => {
+                              setEditingBrand(b);
+                              setIsCreatingBrand(false);
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"
+                            title="Edit Merk"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Hapus merk "${b.name}"?`)) {
+                                const updated = storage.deleteBrand(b.id);
+                                setBrands(updated);
+                                showSuccessFeedback('Merk dihapus.');
+                              }
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-700 hover:bg-rose-900/50 text-rose-400"
+                            title="Hapus Merk"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 5. KELOLA TIPE PRODUK */}
               {activeTab === 'types' && (
                 <div className="space-y-6">
-                  <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Type Produk</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Tipe Produk</h2>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Tambah, edit kategori terkait, atau hapus tipe produk secara manual.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        setEditingProductType({
+                          id: `type-${Date.now()}`,
+                          name: '',
+                          slug: '',
+                          categoryName: categories[0]?.name || 'PHILIPS LED',
+                          description: '',
+                        });
+                        setIsCreatingProductType(true);
+                      }}
+                      className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5 self-start sm:self-auto"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Tambah Tipe Baru
+                    </button>
+                  </div>
+
+                  {editingProductType && (
+                    <div className="p-6 rounded-3xl bg-slate-800 border-2 border-emerald-500/50 shadow-xl space-y-4 text-xs">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Tag className="w-4 h-4 text-emerald-400" />
+                        {isCreatingProductType ? 'Tambah Tipe Baru' : `Edit Tipe: ${editingProductType.name}`}
+                      </h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">Nama Tipe Produk</label>
+                          <input
+                            type="text"
+                            value={editingProductType.name}
+                            onChange={(e) =>
+                              setEditingProductType({
+                                ...editingProductType,
+                                name: e.target.value,
+                                slug: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+                              })
+                            }
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            placeholder="Contoh: Bohlam LED, Saklar Seri, Bor Listrik"
+                          />
+                        </div>
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">Kategori Terkait</label>
+                          <select
+                            value={editingProductType.categoryName}
+                            onChange={(e) => setEditingProductType({ ...editingProductType, categoryName: e.target.value })}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          >
+                            {categories.map((c) => (
+                              <option key={c.id} value={c.name}>{c.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="sm:col-span-2">
+                          <label className="font-semibold text-slate-300 block mb-1">Deskripsi Tipe (Opsional)</label>
+                          <input
+                            type="text"
+                            value={editingProductType.description || ''}
+                            onChange={(e) => setEditingProductType({ ...editingProductType, description: e.target.value })}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            placeholder="Keterangan spesifik jenis tipe..."
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingProductType(null);
+                            setIsCreatingProductType(false);
+                          }}
+                          className="px-3.5 py-1.5 rounded-lg bg-slate-700 text-slate-300 font-medium"
+                        >
+                          Batal
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!editingProductType.name.trim()) return;
+                            const updated = storage.saveProductType(editingProductType);
+                            setProductTypes(updated);
+                            setEditingProductType(null);
+                            setIsCreatingProductType(false);
+                            showSuccessFeedback('Tipe produk berhasil disimpan!');
+                          }}
+                          className="px-4 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"
+                        >
+                          Simpan Tipe
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {productTypes.map((t) => (
-                      <div key={t.id} className="p-3 rounded-2xl bg-slate-800/80 border border-slate-700">
-                        <strong className="text-white text-xs block">{t.name}</strong>
-                        <span className="text-[10px] text-emerald-400">{t.categoryName}</span>
+                      <div key={t.id} className="p-3.5 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <strong className="text-white text-xs block truncate">{t.name}</strong>
+                          <span className="text-[10px] text-emerald-400 block">{t.categoryName}</span>
+                          {t.description && <span className="text-[10px] text-slate-400 line-clamp-1">{t.description}</span>}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            onClick={() => {
+                              setEditingProductType(t);
+                              setIsCreatingProductType(false);
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200"
+                            title="Edit Tipe"
+                          >
+                            <Edit className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Hapus tipe "${t.name}"?`)) {
+                                const updated = storage.deleteProductType(t.id);
+                                setProductTypes(updated);
+                                showSuccessFeedback('Tipe produk dihapus.');
+                              }
+                            }}
+                            className="p-1.5 rounded-lg bg-slate-700 hover:bg-rose-900/50 text-rose-400"
+                            title="Hapus Tipe"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

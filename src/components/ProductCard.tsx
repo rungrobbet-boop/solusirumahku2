@@ -100,6 +100,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             {product.name}
           </h3>
+
+          {product.packingQuantity && product.packingUnit && (
+            <div className="mt-1.5 inline-flex items-center gap-1 text-[10px] text-slate-700 bg-slate-100 font-medium px-2 py-0.5 rounded-md">
+              <span>📦 {product.packingQuantity} {product.packingUnit}/pack</span>
+            </div>
+          )}
         </div>
 
         {/* Price & Action Section */}

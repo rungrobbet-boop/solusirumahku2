@@ -195,6 +195,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = ({
                   </p>
                 </div>
 
+                {/* Packing Unit / Grosir Info if provided */}
+                {product.packingQuantity && product.packingUnit && (
+                  <div className="mb-5 p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-900 flex items-center justify-center shrink-0 font-bold">
+                      📦
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-amber-950">
+                        Satuan Packing (Partai / Grosir)
+                      </h4>
+                      <p className="text-xs text-amber-900">
+                        Isi <strong>{product.packingQuantity} {product.packingUnit}</strong> per kemasan / pack.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Technical Specifications */}
                 {product.specifications && Object.keys(product.specifications).length > 0 && (
                   <div className="mb-6">

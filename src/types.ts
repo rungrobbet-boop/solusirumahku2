@@ -11,6 +11,8 @@ export interface Product {
   images: string[]; // up to 5 images (file data urls or web urls)
   description: string;
   specifications: Record<string, string>;
+  packingQuantity?: number | null; // Jumlah satuan per packing untuk pembelian partai / grosir
+  packingUnit?: 'Pieces' | 'Roll' | 'Slop' | 'Renteng' | 'Yard' | 'Meter' | 'Set' | 'Unit' | 'Lusin' | 'Pack' | 'Karung' | 'Kotak' | 'Box / Carton' | string; // Satuan packing
   isFavoriteMonthRank?: number | null; // 1 to 20 rank for "Produk Favorit Bulan ini"
   isLatest?: boolean;
   rating?: number;
