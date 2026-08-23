@@ -1060,7 +1060,32 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   email: 'solusirumahku.official@gmail.com',
   instagramUrl: 'https://instagram.com/solusirumahku',
   facebookUrl: 'https://facebook.com/solusirumahku',
-  lowStockThreshold: 5,
+  lowStockThreshold: 20,
+
+  // Default Logo & Branding
+  customLogoUrl: '',
+  logoTextPrefix: 'SOLUSI',
+  logoTextSuffix: 'RUMAHKU',
+
+  // Default Top Announcement
+  topAnnouncementBadge: 'Resmi & Terpercaya',
+  topAnnouncementText: 'Solusi Rumahku • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI',
+
+  // Default Hero Banner (Halaman Utama)
+  heroBadge: 'Distributor Resmi & Garansi SNI',
+  heroTitle: 'Solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga',
+  heroSubtitle: 'Pilihan terbaik lampu LED hemat energi, saklar, fitting, mesin bor, kabel berkualitas, hingga perlengkapan dapur & kamar mandi siap kirim ke seluruh Indonesia.',
+  heroMediaType: 'gradient',
+  heroMediaUrl: '',
+  heroBackgroundUrl: '',
+  heroThemeGradient: 'emerald',
+  heroCta1Text: 'Lihat Semua Kategori',
+  heroCta2Text: 'Chat WhatsApp CS',
+
+  // Default Background Halaman
+  pageBackgroundPattern: 'default',
+  pageBackgroundImageUrl: '',
+
   appwriteConfig: {
     endpoint: 'https://cloud.appwrite.io/v1',
     projectId: 'solusi-rumahku-app',

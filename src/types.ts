@@ -95,7 +95,32 @@ export interface StoreSettings {
   email: string;
   instagramUrl?: string;
   facebookUrl?: string;
-  lowStockThreshold: number;
+  lowStockThreshold: number; // default 20
+
+  // LOGO & IDENTITAS BRANDING
+  customLogoUrl?: string;
+  logoTextPrefix?: string;
+  logoTextSuffix?: string;
+
+  // PENGUMUMAN BAR ATAS
+  topAnnouncementBadge?: string;
+  topAnnouncementText?: string;
+
+  // HERO BANNER UTAMA (BERANDA)
+  heroBadge?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroMediaType?: 'gradient' | 'image' | 'video';
+  heroMediaUrl?: string;
+  heroBackgroundUrl?: string;
+  heroThemeGradient?: 'emerald' | 'dark' | 'navy' | 'amber' | 'slate';
+  heroCta1Text?: string;
+  heroCta2Text?: string;
+
+  // BACKGROUND HALAMAN / BERANDA
+  pageBackgroundPattern?: 'default' | 'grid' | 'dots' | 'ambient' | 'custom_image';
+  pageBackgroundImageUrl?: string;
+
   appwriteConfig: {
     endpoint: string;
     projectId: string;
@@ -114,11 +139,28 @@ export interface CartItem {
   notes?: string;
 }
 
+export type AdminRole = 'manager' | 'admin_full' | 'admin_partial';
+
+export interface AdminPermissions {
+  canEditName?: boolean;
+  canEditBrand?: boolean;
+  canEditCategory?: boolean;
+  canEditType?: boolean;
+  canEditImages?: boolean;
+  canEditDescription?: boolean;
+  canEditFavoriteRank?: boolean;
+  canCreateProduct?: boolean;
+  canDeleteProduct?: boolean;
+  canImportCsv?: boolean;
+}
+
 export interface AdminUser {
   id: string;
   username: string;
   fullName: string;
-  role: 'manager' | 'admin';
+  role: AdminRole; // 'manager' = Akses Penuh & Kelola Admin, 'admin_full' = Akses Produk Lengkap, 'admin_partial' = Akses Terbatas (Terkonfigurasi)
+  permissions?: AdminPermissions; // Hak akses granular per bagian yang diatur sepenuhnya oleh Superadmin (Manager)
   createdAt: string;
   lastLogin?: string;
+  createdBy?: string;
 }

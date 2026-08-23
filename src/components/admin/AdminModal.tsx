@@ -32,6 +32,17 @@ import {
   ArrowUp,
   ArrowDown,
   FileSpreadsheet,
+  Users,
+  UserPlus,
+  Home,
+  Shield,
+  Globe,
+  ShieldAlert,
+  HelpCircle,
+  CheckCircle2,
+  Unlock,
+  ShieldCheck,
+  Check,
 } from 'lucide-react';
 import {
   Product,
@@ -43,6 +54,8 @@ import {
   CustomManualFeature,
   StoreSettings,
   AdminUser,
+  AdminRole,
+  AdminPermissions,
 } from '../../types';
 import {
   storage,
@@ -52,6 +65,7 @@ import {
 import { appwriteService } from '../../services/appwriteService';
 import { formatRupiah, getStockStatus } from '../../utils/formatters';
 import { exportProductsToCSV, parseProductsCSV } from '../../utils/csvHelper';
+import { Logo } from '../Logo';
 
 interface AdminModalProps {
   isOpen: boolean;
@@ -84,12 +98,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   // Active Admin Tab
   const [activeTab, setActiveTab] = useState<
     | 'dashboard'
+    | 'homeEditor'
     | 'products'
     | 'categories'
     | 'brands'
     | 'types'
     | 'infoTrend'
     | 'appearance'
+    | 'adminUsers'
     | 'customFeatures'
     | 'changePassword'
     | 'appwrite'
@@ -104,6 +120,47 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [galleryMedia, setGalleryMedia] = useState<GalleryMediaItem[]>([]);
   const [customFeatures, setCustomFeatures] = useState<CustomManualFeature[]>([]);
   const [settings, setSettings] = useState<StoreSettings>(storage.getSettings());
+  const [adminUsersList, setAdminUsersList] = useState<AdminUser[]>(storage.getAdminUsers());
+
+  // User Management State (Manager Only)
+  const [newAdminUsername, setNewAdminUsername] = useState('');
+  const [newAdminFullName, setNewAdminFullName] = useState('');
+  const [newAdminRole, setNewAdminRole] = useState<AdminRole>('admin_full');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminPermissions, setNewAdminPermissions] = useState<AdminPermissions>({
+    canEditName: false,
+    canEditBrand: false,
+    canEditCategory: false,
+    canEditType: false,
+    canEditImages: false,
+    canEditDescription: false,
+    canEditFavoriteRank: false,
+    canCreateProduct: false,
+    canDeleteProduct: false,
+    canImportCsv: false,
+  });
+  const [adminUserError, setAdminUserError] = useState('');
+  const [adminUserSuccess, setAdminUserSuccess] = useState('');
+  const [editingAdminUser, setEditingAdminUser] = useState<AdminUser | null>(null);
+  const [editAdminRole, setEditAdminRole] = useState<AdminRole>('admin_full');
+  const [editAdminPassword, setEditAdminPassword] = useState('');
+  const [editAdminPermissions, setEditAdminPermissions] = useState<AdminPermissions>({
+    canEditName: false,
+    canEditBrand: false,
+    canEditCategory: false,
+    canEditType: false,
+    canEditImages: false,
+    canEditDescription: false,
+    canEditFavoriteRank: false,
+    canCreateProduct: false,
+    canDeleteProduct: false,
+    canImportCsv: false,
+  });
+
+  // Logo file upload ref for Home Editor
+  const logoFileInputRef = useRef<HTMLInputElement>(null);
+  const heroMediaFileInputRef = useRef<HTMLInputElement>(null);
+  const bgImageFileInputRef = useRef<HTMLInputElement>(null);
 
   // Editing state for products
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
@@ -160,6 +217,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     setGalleryMedia(storage.getGalleryMedia());
     setCustomFeatures(storage.getCustomFeatures());
     setSettings(storage.getSettings());
+    setAdminUsersList(storage.getAdminUsers());
     setCurrentAdmin(storage.getCurrentAdmin());
   };
 
@@ -173,6 +231,21 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     setActionSuccessMessage(msg);
     onDataUpdated();
     setTimeout(() => setActionSuccessMessage(''), 3500);
+  };
+
+  // --- Role & Permissions Checks ---
+  const isManager = currentAdmin?.role === 'manager';
+  const isAdminFull = currentAdmin?.role === 'admin_full' || isManager;
+  const isAdminPartial = currentAdmin?.role === 'admin_partial';
+
+  // Granular check function for partial admin vs full/manager
+  const canEditField = (field: keyof AdminPermissions): boolean => {
+    if (!currentAdmin) return false;
+    if (isAdminFull) return true;
+    if (isAdminPartial) {
+      return Boolean(currentAdmin.permissions?.[field]);
+    }
+    return false;
   };
 
   // --- Auth Handlers ---
@@ -221,6 +294,128 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     storage.logoutAdmin();
     setCurrentAdmin(null);
     setAuthMode('choose');
+  };
+
+  // --- Admin User Management Handlers (Manager Only) ---
+  const handleCreateAdminUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentAdmin) return;
+    setAdminUserError('');
+    setAdminUserSuccess('');
+    const res = storage.createAdminUserByManager(currentAdmin, {
+      username: newAdminUsername,
+      fullName: newAdminFullName,
+      role: newAdminRole,
+      password: newAdminPassword,
+      permissions: newAdminRole === 'admin_partial' ? newAdminPermissions : undefined,
+    });
+    if (res.success && res.admin) {
+      setAdminUsersList(storage.getAdminUsers());
+      setNewAdminUsername('');
+      setNewAdminFullName('');
+      setNewAdminPassword('');
+      setNewAdminRole('admin_full');
+      setNewAdminPermissions({
+        canEditName: false,
+        canEditBrand: false,
+        canEditCategory: false,
+        canEditType: false,
+        canEditImages: false,
+        canEditDescription: false,
+        canEditFavoriteRank: false,
+        canCreateProduct: false,
+        canDeleteProduct: false,
+        canImportCsv: false,
+      });
+      setAdminUserSuccess(`Akun admin "${res.admin.fullName}" (${res.admin.role}) berhasil didaftarkan!`);
+      showSuccessFeedback(`Admin @${res.admin.username} berhasil dibuat.`);
+    } else {
+      setAdminUserError(res.error || 'Gagal mendaftarkan admin.');
+    }
+  };
+
+  const handleUpdateAdminUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentAdmin || !editingAdminUser) return;
+    setAdminUserError('');
+    const updatedTarget: AdminUser = {
+      ...editingAdminUser,
+      role: editAdminRole,
+      permissions: editAdminRole === 'admin_partial' ? editAdminPermissions : undefined,
+    };
+    const res = storage.updateAdminUserByManager(
+      currentAdmin,
+      updatedTarget,
+      editAdminPassword || undefined
+    );
+    if (res.success) {
+      setAdminUsersList(storage.getAdminUsers());
+      setEditingAdminUser(null);
+      setEditAdminPassword('');
+      showSuccessFeedback('Hak akses user admin berhasil diperbarui.');
+    } else {
+      setAdminUserError(res.error || 'Gagal memperbarui admin.');
+    }
+  };
+
+  const handleDeleteAdminUser = (id: string, name: string) => {
+    if (!currentAdmin) return;
+    if (confirm(`Apakah Anda yakin ingin menghapus akun admin "${name}"?`)) {
+      const res = storage.deleteAdminUserByManager(currentAdmin, id);
+      if (res.success) {
+        setAdminUsersList(storage.getAdminUsers());
+        showSuccessFeedback(`Akun admin "${name}" telah dihapus.`);
+      } else {
+        alert(res.error || 'Gagal menghapus admin.');
+      }
+    }
+  };
+
+  // --- File Upload Handlers for Custom Home Settings ---
+  const handleLogoFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setSettings((prev) => ({ ...prev, customLogoUrl: result }));
+        showSuccessFeedback('File logo berhasil dimuat. Klik "Simpan Pengaturan Halaman Utama" untuk menerapkan.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleHeroMediaFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setSettings((prev) => ({ ...prev, heroMediaUrl: result, heroMediaType: 'image' }));
+        showSuccessFeedback('File banner berhasil dimuat. Klik "Simpan Pengaturan Halaman Utama" untuk menerapkan.');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleBgImageFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const result = event.target?.result as string;
+      if (result) {
+        setSettings((prev) => ({
+          ...prev,
+          pageBackgroundImageUrl: result,
+          pageBackgroundPattern: 'custom_image',
+        }));
+        showSuccessFeedback('File background berhasil dimuat.');
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   // --- Stock Alert Stats ---
@@ -566,6 +761,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 )}
               </button>
 
+              {/* FITUR BARU: EDIT HALAMAN UTAMA */}
+              <button
+                onClick={() => setActiveTab('homeEditor')}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                  activeTab === 'homeEditor'
+                    ? 'bg-[#065f46] text-white shadow-sm ring-1 ring-emerald-400/50'
+                    : 'text-emerald-300 hover:text-white hover:bg-slate-800/60'
+                }`}
+              >
+                <Home className="w-4 h-4 text-emerald-400" />
+                <span>Halaman Utama</span>
+                <span className="ml-auto text-[9px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.2 rounded font-mono">
+                  Editor
+                </span>
+              </button>
+
               <button
                 onClick={() => setActiveTab('products')}
                 className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
@@ -576,6 +787,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               >
                 <Package className="w-4 h-4" />
                 <span>Produk Detail ({products.length})</span>
+                {isAdminPartial && (
+                  <span className="ml-auto text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1 py-0.2 rounded">
+                    Terbatas
+                  </span>
+                )}
               </button>
 
               <button
@@ -637,6 +853,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 <Palette className="w-4 h-4" />
                 <span>Tampilan & Galeri</span>
               </button>
+
+              {/* FITUR BARU: DAFTAR & KELOLA USER ADMIN (MANAGER ONLY) */}
+              {isManager && (
+                <button
+                  onClick={() => setActiveTab('adminUsers')}
+                  className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                    activeTab === 'adminUsers'
+                      ? 'bg-amber-600 text-white shadow-sm ring-1 ring-amber-400'
+                      : 'text-amber-300 hover:text-white hover:bg-slate-800/60'
+                  }`}
+                >
+                  <Users className="w-4 h-4 text-amber-400" />
+                  <span>Kelola User Admin ({adminUsersList.length})</span>
+                  <span className="ml-auto text-[9px] bg-amber-400/20 text-amber-300 border border-amber-400/40 px-1.5 py-0.2 rounded font-bold uppercase">
+                    Manager
+                  </span>
+                </button>
+              )}
 
               <button
                 onClick={() => setActiveTab('customFeatures')}
@@ -704,7 +938,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       </p>
                     </div>
                     <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                      <span className="text-xs text-slate-400">Stok Menipis (&le; {settings.lowStockThreshold || 5})</span>
+                      <span className="text-xs text-slate-400">Stok Menipis (&le; {settings.lowStockThreshold || 20})</span>
                       <p className="text-2xl font-black text-amber-500 mt-1">
                         {stockNotifications.lowStockProducts.length}
                       </p>
@@ -721,7 +955,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   <div className="bg-slate-800/80 rounded-3xl p-6 border border-slate-700">
                     <h3 className="text-base font-bold text-white flex items-center gap-2 mb-4">
                       <AlertTriangle className="w-5 h-5 text-amber-400" />
-                      Peringatan Stok Otomatis Toko
+                      Peringatan Stok Otomatis Toko (Batas Minimum: {settings.lowStockThreshold || 20})
                     </h3>
 
                     {stockNotifications.totalAlerts === 0 ? (
@@ -738,7 +972,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             <div>
                               <strong className="text-white block">{p.name}</strong>
                               <span className="text-amber-300">
-                                Sisa Stok: <strong>{p.stockCount} unit</strong> (Batas Minimum: {settings.lowStockThreshold})
+                                Sisa Stok: <strong>{p.stockCount} unit</strong> (Batas Minimum: {settings.lowStockThreshold || 20})
                               </span>
                             </div>
                             <button
@@ -781,6 +1015,502 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 </div>
               )}
 
+              {/* ================= FITUR BARU: HALAMAN UTAMA EDITOR ================= */}
+              {activeTab === 'homeEditor' && (
+                <div className="space-y-6 text-xs text-slate-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                        <Home className="w-6 h-6 text-emerald-400" />
+                        Edit & Pengaturan Halaman Utama Toko
+                      </h2>
+                      <p className="text-slate-400 mt-1">
+                        Kustomisasi logo aplikasi, teks dan gambar/video banner utama, background, nama toko, hingga tombol navigasi beranda.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        storage.saveSettings(settings);
+                        showSuccessFeedback('Pengaturan Halaman Utama berhasil disimpan dan diterapkan!');
+                      }}
+                      className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-2 shrink-0 active:scale-98 transition-all"
+                    >
+                      <Save className="w-4 h-4" />
+                      <span>Simpan Halaman Utama</span>
+                    </button>
+                  </div>
+
+                  {/* 1. Identitas Toko & Logo Aplikasi */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                      <Palette className="w-4 h-4" />
+                      1. Identitas Toko & Logo Aplikasi
+                    </h3>
+
+                    {/* Logo Live Preview */}
+                    <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div>
+                        <span className="text-[11px] font-semibold text-slate-400 block mb-1">
+                          Pratinjau Langsung Logo Aplikasi (Live Preview):
+                        </span>
+                        <div className="p-3 rounded-xl bg-white/95 inline-block shadow-inner">
+                          <Logo
+                            size="md"
+                            customLogoUrl={settings.customLogoUrl}
+                            textPrefix={settings.logoTextPrefix || 'SOLUSI'}
+                            textSuffix={settings.logoTextSuffix || 'RUMAHKU'}
+                            storeName={settings.storeName}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          type="file"
+                          ref={logoFileInputRef}
+                          onChange={handleLogoFileUpload}
+                          accept="image/*"
+                          className="hidden"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => logoFileInputRef.current?.click()}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold flex items-center gap-1.5"
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          Upload Logo Gambar
+                        </button>
+                        {settings.customLogoUrl && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSettings({ ...settings, customLogoUrl: undefined });
+                              showSuccessFeedback('Logo dikembalikan ke format vektor default.');
+                            }}
+                            className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold"
+                          >
+                            Reset ke Logo Bawaan
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Nama Toko (Store Name)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.storeName}
+                          onChange={(e) => setSettings({ ...settings, storeName: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold"
+                          placeholder="Solusi Rumahku"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Slogan / Tagline Toko
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.tagline}
+                          onChange={(e) => setSettings({ ...settings, tagline: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          placeholder="Pusat Alat Listrik, Teknik & Rumah Tangga SNI"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Logo Awalan (Prefix)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.logoTextPrefix || ''}
+                          onChange={(e) => setSettings({ ...settings, logoTextPrefix: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold"
+                          placeholder="SOLUSI"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Logo Akhiran (Suffix / Hijau)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.logoTextSuffix || ''}
+                          onChange={(e) => setSettings({ ...settings, logoTextSuffix: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-emerald-400 font-bold"
+                          placeholder="RUMAHKU"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          URL Gambar Logo Kustom (Opsional jika upload file atau link eksternal)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.customLogoUrl || ''}
+                          onChange={(e) => setSettings({ ...settings, customLogoUrl: e.target.value || undefined })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                          placeholder="https://domain.com/logo.png atau upload file di atas"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Pengumuman Bar Paling Atas */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      2. Bar Pengumuman Teratas (Top Announcement Bar)
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Badge Label Pengumuman
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.topAnnouncementBadge || ''}
+                          onChange={(e) => setSettings({ ...settings, topAnnouncementBadge: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-emerald-300 font-bold uppercase text-xs"
+                          placeholder="Resmi & Terpercaya"
+                        />
+                      </div>
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Berjalan / Pengumuman Toko
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.topAnnouncementText || ''}
+                          onChange={(e) => setSettings({ ...settings, topAnnouncementText: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Solusi Rumahku • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Hero Banner Utama (Teks, Gambar/Video/URL Banner & Nuansa Warna) */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                      <ImageIcon className="w-4 h-4" />
+                      3. Banner Utama Beranda (Hero Banner & Media Video / Gambar)
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Badge Label Hero (Kecil di Atas Judul)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.heroBadge || ''}
+                          onChange={(e) => setSettings({ ...settings, heroBadge: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-emerald-300 font-bold"
+                          placeholder="Distributor Resmi & Garansi SNI"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Judul Utama Banner Hero (Headline Besar)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.heroTitle || ''}
+                          onChange={(e) => setSettings({ ...settings, heroTitle: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold text-sm"
+                          placeholder="Solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Subjudul / Deskripsi Lengkap Banner
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={settings.heroSubtitle || ''}
+                          onChange={(e) => setSettings({ ...settings, heroSubtitle: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Pilihan terbaik lampu LED hemat energi, saklar, fitting, mesin bor..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Tema Gradien Warna Banner
+                        </label>
+                        <select
+                          value={settings.heroThemeGradient || 'emerald'}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              heroThemeGradient: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold"
+                        >
+                          <option value="emerald">Emerald Green (Hijau Zamrud - Standar Toko)</option>
+                          <option value="dark">Dark Charcoal (Modern Elegan Gelap)</option>
+                          <option value="navy">Deep Navy Blue (Biru Industri)</option>
+                          <option value="amber">Warm Amber Gold (Emas Premium)</option>
+                          <option value="slate">Slate Steel Gray (Teknik Minimalis)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Tipe Media Sisi Kanan Banner
+                        </label>
+                        <select
+                          value={settings.heroMediaType || 'gradient'}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              heroMediaType: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold"
+                        >
+                          <option value="gradient">4 Kartu Fitur Keunggulan (Original, SNI, Cepat, dsb)</option>
+                          <option value="image">Gambar Banner Utama (Upload / URL)</option>
+                          <option value="video">Video Banner (Embed YouTube / File MP4)</option>
+                        </select>
+                      </div>
+
+                      {settings.heroMediaType !== 'gradient' && (
+                        <div className="sm:col-span-2 p-4 rounded-2xl bg-slate-900/90 border border-slate-700 space-y-3">
+                          <label className="font-bold text-amber-300 block">
+                            URL Gambar / Video Banner Hero
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={settings.heroMediaUrl || ''}
+                              onChange={(e) => setSettings({ ...settings, heroMediaUrl: e.target.value })}
+                              placeholder={
+                                settings.heroMediaType === 'video'
+                                  ? 'Contoh: https://www.youtube.com/watch?v=VIDEO_ID atau URL .mp4'
+                                  : 'https://images.unsplash.com/... atau upload file'
+                              }
+                              className="flex-1 px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-xs"
+                            />
+                            {settings.heroMediaType === 'image' && (
+                              <>
+                                <input
+                                  type="file"
+                                  ref={heroMediaFileInputRef}
+                                  onChange={handleHeroMediaFileUpload}
+                                  accept="image/*"
+                                  className="hidden"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => heroMediaFileInputRef.current?.click()}
+                                  className="px-3 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white font-bold shrink-0 flex items-center gap-1"
+                                >
+                                  <Upload className="w-3.5 h-3.5" />
+                                  Upload
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          URL Gambar Latar Belakang (Background Overlay) Banner Hero (Opsional)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.heroBackgroundUrl || ''}
+                          onChange={(e) => setSettings({ ...settings, heroBackgroundUrl: e.target.value || undefined })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                          placeholder="https://images.unsplash.com/photo-...?w=1600 (Opsional)"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Tombol Aksi 1 (CTA 1)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.heroCta1Text || ''}
+                          onChange={(e) => setSettings({ ...settings, heroCta1Text: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          placeholder="Lihat Semua Kategori"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Tombol Aksi 2 (CTA 2 WhatsApp)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.heroCta2Text || ''}
+                          onChange={(e) => setSettings({ ...settings, heroCta2Text: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          placeholder="Chat WhatsApp CS"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Gambar Background & Pola Latar Halaman */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      4. Latar Belakang & Pola Tampilan Seluruh Halaman (Page Background)
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Pilihan Pola Latar Belakang (Background Pattern)
+                        </label>
+                        <select
+                          value={settings.pageBackgroundPattern || 'default'}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              pageBackgroundPattern: e.target.value as any,
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold"
+                        >
+                          <option value="default">Polos / Standar Bersih (Light Off-White)</option>
+                          <option value="grid">Pola Kotak Arsitektur (Architectural Grid 24px)</option>
+                          <option value="dots">Pola Titik Modern (Subtle Dot Matrix 16px)</option>
+                          <option value="custom_image">Gambar Latar Kustom (Custom Image Wallpaper)</option>
+                        </select>
+                      </div>
+
+                      {settings.pageBackgroundPattern === 'custom_image' && (
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            URL Gambar Latar Belakang / Upload File
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={settings.pageBackgroundImageUrl || ''}
+                              onChange={(e) => setSettings({ ...settings, pageBackgroundImageUrl: e.target.value })}
+                              className="flex-1 px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                              placeholder="URL gambar latar..."
+                            />
+                            <input
+                              type="file"
+                              ref={bgImageFileInputRef}
+                              onChange={handleBgImageFileUpload}
+                              accept="image/*"
+                              className="hidden"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => bgImageFileInputRef.current?.click()}
+                              className="px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold"
+                            >
+                              Upload
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 5. Informasi Kontak, Jam Kerja & Batas Stok */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4" />
+                      5. Informasi Kontak & Jam Operasional Toko
+                    </h3>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Nomor WhatsApp Utama Toko
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.phoneWhatsApp}
+                          onChange={(e) => setSettings({ ...settings, phoneWhatsApp: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono"
+                          placeholder="628123456789"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Batas Peringatan Stok Menipis (&le; Jumlah Unit)
+                        </label>
+                        <input
+                          type="number"
+                          value={settings.lowStockThreshold || 20}
+                          onChange={(e) => setSettings({ ...settings, lowStockThreshold: Number(e.target.value) || 20 })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Sistem akan otomatis memberi notifikasi jika stok produk &le; batas ini (Standar: 20 unit).
+                        </span>
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Jam & Hari Kerja Operasional
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.businessHours}
+                          onChange={(e) => setSettings({ ...settings, businessHours: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          placeholder="Senin - Sabtu (Kecuali Hari Libur): 08:00 - 17:00 WIB"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Alamat Fisik / Workshop Toko
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.address}
+                          onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          placeholder="Jl. Raya Utama No. 88, Pusat Perlengkapan Bangunan"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-slate-700 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          storage.saveSettings(settings);
+                          showSuccessFeedback('Pengaturan Halaman Utama berhasil disimpan!');
+                        }}
+                        className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-2 active:scale-98 transition-all"
+                      >
+                        <Save className="w-4 h-4" />
+                        Simpan Semua Pengaturan Halaman Utama
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* 2. KELOLA PRODUK DETAIL */}
               {activeTab === 'products' && (
                 <div className="space-y-6">
@@ -801,50 +1531,112 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         Export CSV
                       </button>
 
-                      <button
-                        onClick={() => {
-                          setImportCsvText('');
-                          setImportError('');
-                          setIsImportModalOpen(true);
-                        }}
-                        className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5"
-                        title="Import produk massal dari file CSV / Google Sheets"
-                      >
-                        <Upload className="w-4 h-4 text-sky-400" />
-                        Import CSV
-                      </button>
+                      {(isAdminFull || canEditField('canImportCsv')) && (
+                        <button
+                          onClick={() => {
+                            setImportCsvText('');
+                            setImportError('');
+                            setIsImportModalOpen(true);
+                          }}
+                          className="px-3.5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5"
+                          title="Import produk massal dari file CSV / Google Sheets"
+                        >
+                          <Upload className="w-4 h-4 text-sky-400" />
+                          Import CSV
+                        </button>
+                      )}
 
-                      <button
-                        onClick={() => {
-                          setEditingProduct({
-                            id: `prod-${Date.now()}`,
-                            name: '',
-                            brand: brands[0]?.name || 'Philips',
-                            category: categories[0]?.name || 'PHILIPS LED',
-                            type: productTypes[0]?.name || 'Bohlam LED',
-                            price: 50000,
-                            discountPrice: undefined,
-                            stockCount: 10,
-                            packingQuantity: undefined,
-                            packingUnit: 'Pcs',
-                            mainImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600',
-                            images: ['https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600'],
-                            description: '',
-                            specifications: { 'Garansi': 'Resmi Toko', 'Standar': 'SNI' },
-                            isFavoriteMonthRank: null,
-                            isLatest: false,
-                            createdAt: new Date().toISOString(),
-                            updatedAt: new Date().toISOString(),
-                          });
-                          setIsCreatingProduct(true);
-                        }}
-                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5"
-                      >
-                        <Plus className="w-4 h-4" />
-                        Tambah Produk Baru
-                      </button>
+                      {(isAdminFull || canEditField('canCreateProduct')) ? (
+                        <button
+                          onClick={() => {
+                            setEditingProduct({
+                              id: `prod-${Date.now()}`,
+                              name: '',
+                              brand: brands[0]?.name || 'Philips',
+                              category: categories[0]?.name || 'PHILIPS LED',
+                              type: productTypes[0]?.name || 'Bohlam LED',
+                              price: 50000,
+                              discountPrice: undefined,
+                              stockCount: 10,
+                              packingQuantity: undefined,
+                              packingUnit: 'Pcs',
+                              mainImage: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600',
+                              images: ['https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=600'],
+                              description: '',
+                              specifications: { Garansi: 'Resmi Toko', Standar: 'SNI' },
+                              isFavoriteMonthRank: null,
+                              isLatest: false,
+                              createdAt: new Date().toISOString(),
+                              updatedAt: new Date().toISOString(),
+                            });
+                            setIsCreatingProduct(true);
+                          }}
+                          className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-sm flex items-center gap-1.5"
+                        >
+                          <Plus className="w-4 h-4" />
+                          Tambah Produk Baru
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 px-3 py-2 rounded-xl font-medium flex items-center gap-1">
+                          <ShieldAlert className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>Izin Tambah Produk Dikunci</span>
+                        </span>
+                      )}
                     </div>
                   </div>
+
+                  {/* RBAC Notice Banner for Partial Admin */}
+                  {isAdminPartial && (
+                    <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs flex items-start gap-3">
+                      <ShieldAlert className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                      <div className="space-y-1.5 w-full">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <strong className="text-white block">Status Hak Akses Admin Terbatas (Dikonfigurasi Superadmin)</strong>
+                          <span className="text-[10px] bg-amber-500/20 px-2 py-0.5 rounded-full text-amber-200 border border-amber-500/30 font-semibold">
+                            Role: Admin Terbatas
+                          </span>
+                        </div>
+                        <p className="text-slate-300 text-[11px]">
+                          Anda dapat mengubah <strong>Harga Normal</strong>, <strong>Harga Diskon</strong>, <strong>Jumlah Stok Barang</strong>, dan <strong>Satuan Packing Grosir</strong>. Izin pengubahan data inti dan aksi lainnya dikontrol secara fleksibel oleh Superadmin.
+                        </p>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          <span className="px-2 py-0.5 rounded bg-emerald-950/80 border border-emerald-500/40 text-emerald-300 text-[10px] font-bold">
+                            ✓ Harga, Diskon & Stok (Aktif)
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditName') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditName') ? '✓' : '✕'} Nama Produk
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditBrand') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditBrand') ? '✓' : '✕'} Merk
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditCategory') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditCategory') ? '✓' : '✕'} Kategori
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditType') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditType') ? '✓' : '✕'} Tipe
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditImages') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditImages') ? '✓' : '✕'} Foto Produk
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditDescription') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditDescription') ? '✓' : '✕'} Deskripsi
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canEditFavoriteRank') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canEditFavoriteRank') ? '✓' : '✕'} Favorit
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canCreateProduct') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canCreateProduct') ? '✓' : '✕'} Tambah Produk
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canDeleteProduct') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canDeleteProduct') ? '✓' : '✕'} Hapus Produk
+                          </span>
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${canEditField('canImportCsv') ? 'bg-emerald-950/80 border-emerald-500/40 text-emerald-300' : 'bg-slate-900 border-slate-700 text-slate-400 line-through'}`}>
+                            {canEditField('canImportCsv') ? '✓' : '✕'} Import CSV
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Search Bar for Products in Admin */}
                   <div className="relative">
@@ -870,10 +1662,17 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   {editingProduct && (
                     <div className="p-6 rounded-3xl bg-slate-800 border-2 border-emerald-500/50 shadow-xl">
                       <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
-                        <h3 className="text-base font-bold text-white flex items-center gap-2">
+                        <div className="flex items-center gap-2">
                           <Package className="w-5 h-5 text-emerald-400" />
-                          {isCreatingProduct ? 'Tambah Produk Baru' : `Edit Produk: ${editingProduct.name}`}
-                        </h3>
+                          <h3 className="text-base font-bold text-white">
+                            {isCreatingProduct ? 'Tambah Produk Baru' : `Edit Produk: ${editingProduct.name}`}
+                          </h3>
+                          {isAdminPartial && (
+                            <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/40 px-2 py-0.5 rounded font-bold">
+                              Edit Sebagian
+                            </span>
+                          )}
+                        </div>
                         <button
                           onClick={() => {
                             setEditingProduct(null);
@@ -887,22 +1686,32 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                         <div className="md:col-span-2">
-                          <label className="font-semibold text-slate-300 block mb-1">Nama Produk</label>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Nama Produk {!canEditField('canEditName') && <span className="text-amber-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
+                          </label>
                           <input
                             type="text"
+                            disabled={!canEditField('canEditName')}
                             value={editingProduct.name}
                             onChange={(e) => setEditingProduct({ ...editingProduct, name: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:ring-2 focus:ring-emerald-500"
+                            className={`w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white focus:ring-2 focus:ring-emerald-500 ${
+                              !canEditField('canEditName') ? 'opacity-60 cursor-not-allowed bg-slate-950' : ''
+                            }`}
                             placeholder="Nama produk lengkap..."
                           />
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-300 block mb-1">Merk (Brand)</label>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Merk (Brand) {!canEditField('canEditBrand') && <span className="text-amber-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
+                          </label>
                           <select
+                            disabled={!canEditField('canEditBrand')}
                             value={editingProduct.brand}
                             onChange={(e) => setEditingProduct({ ...editingProduct, brand: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            className={`w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white ${
+                              !canEditField('canEditBrand') ? 'opacity-60 cursor-not-allowed bg-slate-950' : ''
+                            }`}
                           >
                             {brands.map((b) => (
                               <option key={b.id} value={b.name}>{b.name}</option>
@@ -911,11 +1720,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-300 block mb-1">Kategori</label>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Kategori {!canEditField('canEditCategory') && <span className="text-amber-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
+                          </label>
                           <select
+                            disabled={!canEditField('canEditCategory')}
                             value={editingProduct.category}
                             onChange={(e) => setEditingProduct({ ...editingProduct, category: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            className={`w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white ${
+                              !canEditField('canEditCategory') ? 'opacity-60 cursor-not-allowed bg-slate-950' : ''
+                            }`}
                           >
                             {categories.map((c) => (
                               <option key={c.id} value={c.name}>{c.name}</option>
@@ -923,18 +1737,22 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           </select>
                         </div>
 
-                        <div>
-                          <label className="font-semibold text-slate-300 block mb-1">Harga Normal (Rp)</label>
+                        <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40">
+                          <label className="font-bold text-emerald-300 block mb-1">
+                            Harga Normal (Rp) &bull; Dapat Diubah
+                          </label>
                           <input
                             type="number"
                             value={editingProduct.price}
                             onChange={(e) => setEditingProduct({ ...editingProduct, price: Number(e.target.value) })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-emerald-600 text-white font-bold"
                           />
                         </div>
 
-                        <div>
-                          <label className="font-semibold text-slate-300 block mb-1">Harga Diskon (Opsional Rp)</label>
+                        <div className="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40">
+                          <label className="font-bold text-emerald-300 block mb-1">
+                            Harga Diskon (Opsional Rp) &bull; Dapat Diubah
+                          </label>
                           <input
                             type="number"
                             value={editingProduct.discountPrice || ''}
@@ -944,16 +1762,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                 discountPrice: e.target.value ? Number(e.target.value) : undefined,
                               })
                             }
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
-                            placeholder="Biarkan kosong jika tidak ada diskon"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-emerald-600 text-white"
+                            placeholder="Biarkan kosong jika tidak diskon"
                           />
                         </div>
 
-                        {/* Satuan Packing (Grosir / Per Kemasan) - Request 15 */}
+                        {/* Satuan Packing (Grosir / Per Kemasan) */}
                         <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <label className="font-bold text-emerald-300 block mb-1">
-                              Jumlah Satuan per Packing (Kemasan / Grosir)
+                              Jumlah Satuan per Packing (Kemasan / Grosir) &bull; Dapat Diubah
                             </label>
                             <input
                               type="number"
@@ -970,7 +1788,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           </div>
                           <div>
                             <label className="font-bold text-emerald-300 block mb-1">
-                              Satuan Packing
+                              Satuan Packing &bull; Dapat Diubah
                             </label>
                             <input
                               type="text"
@@ -988,9 +1806,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         </div>
 
                         {/* Stok Konfigurasi (Tersedia vs Tanya Admin) */}
-                        <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-700 md:col-span-2">
+                        <div className="p-4 rounded-2xl bg-slate-900/90 border border-amber-500/50 md:col-span-2">
                           <label className="font-bold text-amber-300 block mb-1">
-                            Jumlah Stok Barang (Ketentuan User: Angka = &ldquo;Tersedia&rdquo; | Kosong = &ldquo;Tanya Admin&rdquo;)
+                            Jumlah Stok Barang (Ketentuan User: Angka = &ldquo;Tersedia&rdquo; | Kosong = &ldquo;Tanya Admin&rdquo;) &bull; Dapat Diubah
                           </label>
                           <input
                             type="number"
@@ -1001,7 +1819,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                 stockCount: e.target.value === '' ? null : Number(e.target.value),
                               })
                             }
-                            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-600 text-white font-mono"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-amber-600 text-white font-mono text-sm"
                             placeholder="Kosongkan jika ingin terlihat sebagai 'Tanya Admin'"
                           />
                           <span className="text-[11px] text-slate-400 mt-1 block">
@@ -1015,9 +1833,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         {/* Favorit Bulan ini (1-20) */}
                         <div>
                           <label className="font-semibold text-amber-300 block mb-1">
-                            Rank &ldquo;Produk Favorit Bulan Ini&rdquo; (Pilihan 1 s/d 20)
+                            Rank &ldquo;Produk Favorit Bulan Ini&rdquo; (Pilihan 1 s/d 20) {!canEditField('canEditFavoriteRank') && <span className="text-slate-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
                           </label>
                           <select
+                            disabled={!canEditField('canEditFavoriteRank')}
                             value={editingProduct.isFavoriteMonthRank || ''}
                             onChange={(e) =>
                               setEditingProduct({
@@ -1025,7 +1844,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                 isFavoriteMonthRank: e.target.value ? Number(e.target.value) : null,
                               })
                             }
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold"
+                            className={`w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold ${
+                              !canEditField('canEditFavoriteRank') ? 'opacity-60 cursor-not-allowed bg-slate-950' : ''
+                            }`}
                           >
                             <option value="">Bukan Favorit Bulan Ini</option>
                             {Array.from({ length: 20 }, (_, i) => i + 1).map((num) => (
@@ -1035,19 +1856,24 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         </div>
 
                         <div>
-                          <label className="font-semibold text-slate-300 block mb-1">Tipe Produk</label>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Tipe Produk {!canEditField('canEditType') && <span className="text-slate-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
+                          </label>
                           <input
                             type="text"
+                            disabled={!canEditField('canEditType')}
                             value={editingProduct.type}
                             onChange={(e) => setEditingProduct({ ...editingProduct, type: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            className={`w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white ${
+                              !canEditField('canEditType') ? 'opacity-60 cursor-not-allowed bg-slate-950' : ''
+                            }`}
                           />
                         </div>
 
-                        {/* Up to 5 Images (File upload + URLs) */}
+                        {/* Up to 5 Images */}
                         <div className="md:col-span-2 p-4 rounded-2xl bg-slate-900 border border-slate-700">
                           <label className="font-bold text-white block mb-2">
-                            Galeri Foto Produk (Hingga 5 Gambar - File Upload & URL)
+                            Galeri Foto Produk (Hingga 5 Gambar) {!canEditField('canEditImages') && <span className="text-amber-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
                           </label>
 
                           <div className="space-y-3 mb-4">
@@ -1056,6 +1882,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                 <span className="text-[10px] text-slate-400 w-16">Foto #{idx + 1}</span>
                                 <input
                                   type="text"
+                                  disabled={!canEditField('canEditImages')}
                                   value={img}
                                   onChange={(e) => {
                                     const nextImages = [...(editingProduct.images || [])];
@@ -1066,45 +1893,51 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                       mainImage: idx === 0 ? e.target.value : editingProduct.mainImage,
                                     });
                                   }}
-                                  className="flex-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs"
+                                  className={`flex-1 px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-700 text-white text-xs ${
+                                    !canEditField('canEditImages') ? 'opacity-60 cursor-not-allowed' : ''
+                                  }`}
                                   placeholder="URL gambar..."
                                 />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingProduct({
-                                      ...editingProduct,
-                                      mainImage: img,
-                                    });
-                                  }}
-                                  className={`px-2 py-1 rounded text-[10px] font-bold ${
-                                    editingProduct.mainImage === img
-                                      ? 'bg-emerald-600 text-white'
-                                      : 'bg-slate-800 text-slate-400 hover:text-white'
-                                  }`}
-                                >
-                                  {editingProduct.mainImage === img ? 'Gambar Utama' : 'Jadikan Utama'}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const nextImages = editingProduct.images.filter((_, i) => i !== idx);
-                                    setEditingProduct({
-                                      ...editingProduct,
-                                      images: nextImages,
-                                      mainImage: nextImages[0] || '',
-                                    });
-                                  }}
-                                  className="p-1 text-rose-400 hover:text-rose-300"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
+                                {canEditField('canEditImages') && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingProduct({
+                                          ...editingProduct,
+                                          mainImage: img,
+                                        });
+                                      }}
+                                      className={`px-2 py-1 rounded text-[10px] font-bold ${
+                                        editingProduct.mainImage === img
+                                          ? 'bg-emerald-600 text-white'
+                                          : 'bg-slate-800 text-slate-400 hover:text-white'
+                                      }`}
+                                    >
+                                      {editingProduct.mainImage === img ? 'Gambar Utama' : 'Jadikan Utama'}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const nextImages = editingProduct.images.filter((_, i) => i !== idx);
+                                        setEditingProduct({
+                                          ...editingProduct,
+                                          images: nextImages,
+                                          mainImage: nextImages[0] || '',
+                                        });
+                                      }}
+                                      className="p-1 text-rose-400 hover:text-rose-300"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             ))}
                           </div>
 
                           {/* Add Image URL / File input */}
-                          {(editingProduct.images?.length || 0) < 5 && (
+                          {canEditField('canEditImages') && (editingProduct.images?.length || 0) < 5 && (
                             <div className="flex flex-wrap items-center gap-2">
                               <input
                                 type="file"
@@ -1132,12 +1965,17 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         </div>
 
                         <div className="md:col-span-2">
-                          <label className="font-semibold text-slate-300 block mb-1">Deskripsi Produk</label>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Deskripsi Produk {!canEditField('canEditDescription') && <span className="text-amber-400 text-[10px] font-normal">(Terkunci Superadmin)</span>}
+                          </label>
                           <textarea
                             rows={3}
+                            disabled={!canEditField('canEditDescription')}
                             value={editingProduct.description}
                             onChange={(e) => setEditingProduct({ ...editingProduct, description: e.target.value })}
-                            className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                            className={`w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white ${
+                              !canEditField('canEditDescription') ? 'opacity-60 cursor-not-allowed bg-slate-950' : ''
+                            }`}
                           />
                         </div>
                       </div>
@@ -1163,7 +2001,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-1.5"
                         >
                           <Save className="w-4 h-4" />
-                          Simpan Produk
+                          Simpan Perubahan Produk
                         </button>
                       </div>
                     </div>
@@ -1246,24 +2084,27 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                           setEditingProduct(p);
                                           setIsCreatingProduct(false);
                                         }}
-                                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
-                                        title="Edit"
+                                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center gap-1 text-[11px]"
+                                        title={isAdminPartial ? 'Edit Stok & Harga' : 'Edit Produk Lengkap'}
                                       >
-                                        <Edit className="w-3.5 h-3.5" />
+                                        <Edit className="w-3.5 h-3.5 text-emerald-400" />
+                                        <span>{isAdminPartial ? 'Edit Stok' : 'Edit'}</span>
                                       </button>
-                                      <button
-                                        onClick={() => {
-                                          if (confirm(`Hapus produk "${p.name}"?`)) {
-                                            const updated = storage.deleteProduct(p.id);
-                                            setProducts(updated);
-                                            showSuccessFeedback('Produk dihapus.');
-                                          }
-                                        }}
-                                        className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-rose-400"
-                                        title="Hapus"
-                                      >
-                                        <Trash2 className="w-3.5 h-3.5" />
-                                      </button>
+                                      {(isAdminFull || canEditField('canDeleteProduct')) && (
+                                        <button
+                                          onClick={() => {
+                                            if (confirm(`Hapus produk "${p.name}"?`)) {
+                                              const updated = storage.deleteProduct(p.id);
+                                              setProducts(updated);
+                                              showSuccessFeedback('Produk dihapus.');
+                                            }
+                                          }}
+                                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-rose-400"
+                                          title="Hapus Produk"
+                                        >
+                                          <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
                                     </div>
                                   </td>
                                 </tr>
@@ -2251,6 +3092,667 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       <Plus className="w-4 h-4" />
                       Tambah Kartu Fitur Baru
                     </button>
+                  </div>
+                </div>
+              )}
+
+              {/* KELOLA USER ADMIN (MANAGER ONLY) */}
+              {activeTab === 'adminUsers' && (
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <h2 className="text-xl sm:text-2xl font-black text-white flex items-center gap-2">
+                        <Users className="w-6 h-6 text-amber-400" />
+                        Kelola Akun & Hak Akses Admin
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Khusus Manager: Daftarkan username, password, dan tentukan pembatasan akses editing (Admin Penuh vs Admin Terbatas).
+                      </p>
+                    </div>
+                  </div>
+
+                  {adminUserSuccess && (
+                    <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 text-xs font-medium">
+                      {adminUserSuccess}
+                    </div>
+                  )}
+
+                  {adminUserError && (
+                    <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-xs font-medium">
+                      {adminUserError}
+                    </div>
+                  )}
+
+                  {/* Form Create New Admin User */}
+                  <div className="p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4">
+                    <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                      <UserPlus className="w-4 h-4 text-emerald-400" />
+                      Daftarkan User Admin Baru
+                    </h3>
+                    <form onSubmit={handleCreateAdminUser} className="space-y-4 text-xs">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">Username Admin</label>
+                          <input
+                            type="text"
+                            required
+                            value={newAdminUsername}
+                            onChange={(e) => setNewAdminUsername(e.target.value)}
+                            placeholder="Contoh: staf_gudang"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">Nama Lengkap Admin</label>
+                          <input
+                            type="text"
+                            required
+                            value={newAdminFullName}
+                            onChange={(e) => setNewAdminFullName(e.target.value)}
+                            placeholder="Contoh: Budi Santoso"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Password (Min 8 karakter, 1 Huruf Kapital)
+                          </label>
+                          <input
+                            type="password"
+                            required
+                            value={newAdminPassword}
+                            onChange={(e) => setNewAdminPassword(e.target.value)}
+                            placeholder="Contoh: Gudang2026"
+                            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="font-semibold text-slate-300 block mb-1">
+                            Tingkat Otorisasi / Hak Akses
+                          </label>
+                          <select
+                            value={newAdminRole}
+                            onChange={(e) => setNewAdminRole(e.target.value as 'manager' | 'admin_full' | 'admin_partial')}
+                            className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white font-semibold"
+                          >
+                            <option value="admin_partial">
+                              Admin Terbatas (Hanya Edit Harga, Diskon, Stok & Satuan Packing)
+                            </option>
+                            <option value="admin_full">
+                              Admin Penuh (Dapat Menambah, Mengedit Seluruh Detail & Hapus Produk)
+                            </option>
+                            <option value="manager">
+                              Manager (Akses Penuh Termasuk Kelola Admin & Halaman Utama)
+                            </option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="p-3.5 rounded-2xl bg-slate-900 border border-slate-700/80 text-[11px] text-slate-400 space-y-1">
+                        <strong className="text-white block">Penjelasan Pembatasan Akses:</strong>
+                        <p>&bull; <span className="text-amber-300 font-semibold">Admin Terbatas:</span> Dapat dikonfigurasi fleksibel per bidang (Nama, Merk, Kategori, Foto, Tambah/Hapus Produk, dll). Selalu dapat mengubah Harga & Stok.</p>
+                        <p>&bull; <span className="text-emerald-300 font-semibold">Admin Penuh:</span> Dapat mengelola seluruh katalog produk, import CSV, kategori, merk, dan tipe secara penuh.</p>
+                      </div>
+
+                      {/* Granular Permissions Configurator for New Admin (when admin_partial is selected) */}
+                      {newAdminRole === 'admin_partial' && (
+                        <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-4">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                            <div>
+                              <h4 className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                                <Sliders className="w-4 h-4 text-amber-400" />
+                                Konfigurasi Izin Khusus Admin Terbatas (Opsional per Bidang)
+                              </h4>
+                              <p className="text-[11px] text-slate-400">
+                                Centang bidang / fitur yang diizinkan untuk diedit oleh admin ini. Bidang yang tidak dicentang akan otomatis terkunci.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setNewAdminPermissions({
+                                    canEditName: true,
+                                    canEditBrand: true,
+                                    canEditCategory: true,
+                                    canEditType: true,
+                                    canEditImages: true,
+                                    canEditDescription: true,
+                                    canEditFavoriteRank: true,
+                                    canCreateProduct: true,
+                                    canDeleteProduct: true,
+                                    canImportCsv: true,
+                                  })
+                                }
+                                className="px-2.5 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold"
+                              >
+                                Aktifkan Semua
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setNewAdminPermissions({
+                                    canEditName: false,
+                                    canEditBrand: false,
+                                    canEditCategory: false,
+                                    canEditType: false,
+                                    canEditImages: false,
+                                    canEditDescription: false,
+                                    canEditFavoriteRank: false,
+                                    canCreateProduct: false,
+                                    canDeleteProduct: false,
+                                    canImportCsv: false,
+                                  })
+                                }
+                                className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] font-bold"
+                              >
+                                Kunci Semua
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="space-y-3">
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                                1. Bidang Data Inti Produk
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {[
+                                  { key: 'canEditName', label: 'Nama Produk', desc: 'Izin ubah teks nama produk' },
+                                  { key: 'canEditBrand', label: 'Merk (Brand)', desc: 'Izin ubah merk produk' },
+                                  { key: 'canEditCategory', label: 'Kategori', desc: 'Izin ubah kategori produk' },
+                                  { key: 'canEditType', label: 'Tipe Produk', desc: 'Izin ubah tipe / varian' },
+                                  { key: 'canEditImages', label: 'Foto & Galeri Produk', desc: 'Izin upload / ganti foto' },
+                                  { key: 'canEditDescription', label: 'Deskripsi Produk', desc: 'Izin ubah teks deskripsi' },
+                                  { key: 'canEditFavoriteRank', label: 'Favorit Bulan Ini', desc: 'Izin atur rank 1 s/d 20' },
+                                ].map((item) => {
+                                  const k = item.key as keyof AdminPermissions;
+                                  const active = Boolean(newAdminPermissions[k]);
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={item.key}
+                                      onClick={() =>
+                                        setNewAdminPermissions((prev) => ({
+                                          ...prev,
+                                          [k]: !prev[k],
+                                        }))
+                                      }
+                                      className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                                        active
+                                          ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 shadow-sm'
+                                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                                      }`}
+                                    >
+                                      <div
+                                        className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
+                                          active ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-900'
+                                        }`}
+                                      >
+                                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                                      </div>
+                                      <div>
+                                        <div className="font-bold text-xs text-white">{item.label}</div>
+                                        <div className="text-[10px] text-slate-400 leading-snug">{item.desc}</div>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            <div>
+                              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                                2. Aksi & Operasi Katalog
+                              </span>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                {[
+                                  { key: 'canCreateProduct', label: 'Tambah Produk Baru', desc: 'Izin buat produk baru' },
+                                  { key: 'canDeleteProduct', label: 'Hapus Produk', desc: 'Izin hapus produk' },
+                                  { key: 'canImportCsv', label: 'Import CSV / Sheets', desc: 'Izin import CSV massal' },
+                                ].map((item) => {
+                                  const k = item.key as keyof AdminPermissions;
+                                  const active = Boolean(newAdminPermissions[k]);
+                                  return (
+                                    <button
+                                      type="button"
+                                      key={item.key}
+                                      onClick={() =>
+                                        setNewAdminPermissions((prev) => ({
+                                          ...prev,
+                                          [k]: !prev[k],
+                                        }))
+                                      }
+                                      className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                                        active
+                                          ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 shadow-sm'
+                                          : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                                      }`}
+                                    >
+                                      <div
+                                        className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
+                                          active ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-900'
+                                        }`}
+                                      >
+                                        {active && <Check className="w-3 h-3 stroke-[3]" />}
+                                      </div>
+                                      <div>
+                                        <div className="font-bold text-xs text-white">{item.label}</div>
+                                        <div className="text-[10px] text-slate-400 leading-snug">{item.desc}</div>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+                            <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                            <span>
+                              <strong>Catatan:</strong> Bidang <em>Harga Normal</em>, <em>Harga Diskon</em>, <em>Jumlah Stok Barang</em>, dan <em>Satuan Packing Grosir</em> selalu aktif untuk diedit oleh semua admin.
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex justify-end pt-2">
+                        <button
+                          type="submit"
+                          className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5 shadow-md"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                          Daftarkan Akun Admin
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* Edit Admin Modal Form */}
+                  {editingAdminUser && (
+                    <div className="p-6 rounded-3xl bg-slate-800 border-2 border-amber-500/50 shadow-xl space-y-4 text-xs">
+                      <div className="flex items-center justify-between border-b border-slate-700 pb-3">
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <ShieldAlert className="w-4 h-4 text-amber-400" />
+                          Edit Hak Akses Admin: @{editingAdminUser.username} ({editingAdminUser.fullName})
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setEditingAdminUser(null)}
+                          className="text-slate-400 hover:text-white"
+                        >
+                          Batal
+                        </button>
+                      </div>
+
+                      <form onSubmit={handleUpdateAdminUser} className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="font-semibold text-slate-300 block mb-1">
+                              Ubah Tingkat Otorisasi
+                            </label>
+                            <select
+                              value={editAdminRole}
+                              onChange={(e) => setEditAdminRole(e.target.value as 'manager' | 'admin_full' | 'admin_partial')}
+                              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold"
+                            >
+                              <option value="admin_partial">
+                                Admin Terbatas (Konfigurasi Fleksibel per Bidang)
+                              </option>
+                              <option value="admin_full">
+                                Admin Penuh (Edit Seluruh Detail & Hapus Produk)
+                              </option>
+                              <option value="manager">
+                                Manager (Akses Penuh Termasuk Kelola Admin & Halaman Utama)
+                              </option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="font-semibold text-slate-300 block mb-1">
+                              Reset Password (Opsional)
+                            </label>
+                            <input
+                              type="password"
+                              value={editAdminPassword}
+                              onChange={(e) => setEditAdminPassword(e.target.value)}
+                              placeholder="Biarkan kosong jika tidak ingin mengubah password"
+                              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono"
+                            />
+                          </div>
+                        </div>
+
+                        {/* Granular Permissions Configurator for Editing Admin User (when admin_partial) */}
+                        {editAdminRole === 'admin_partial' && (
+                          <div className="p-4 rounded-2xl bg-slate-900 border border-amber-500/40 space-y-4">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                              <div>
+                                <h4 className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                                  <Sliders className="w-4 h-4 text-amber-400" />
+                                  Konfigurasi Izin Khusus Admin Terbatas
+                                </h4>
+                                <p className="text-[11px] text-slate-400">
+                                  Centang bidang atau aksi yang diizinkan untuk admin @{editingAdminUser.username}.
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setEditAdminPermissions({
+                                      canEditName: true,
+                                      canEditBrand: true,
+                                      canEditCategory: true,
+                                      canEditType: true,
+                                      canEditImages: true,
+                                      canEditDescription: true,
+                                      canEditFavoriteRank: true,
+                                      canCreateProduct: true,
+                                      canDeleteProduct: true,
+                                      canImportCsv: true,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/40 text-[10px] font-bold"
+                                >
+                                  Aktifkan Semua
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setEditAdminPermissions({
+                                      canEditName: false,
+                                      canEditBrand: false,
+                                      canEditCategory: false,
+                                      canEditType: false,
+                                      canEditImages: false,
+                                      canEditDescription: false,
+                                      canEditFavoriteRank: false,
+                                      canCreateProduct: false,
+                                      canDeleteProduct: false,
+                                      canImportCsv: false,
+                                    })
+                                  }
+                                  className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-600 text-[10px] font-bold"
+                                >
+                                  Kunci Semua
+                                </button>
+                              </div>
+                            </div>
+
+                            <div className="space-y-3">
+                              <div>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                                  1. Bidang Data Inti Produk
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {[
+                                    { key: 'canEditName', label: 'Nama Produk', desc: 'Izin ubah teks nama produk' },
+                                    { key: 'canEditBrand', label: 'Merk (Brand)', desc: 'Izin ubah merk produk' },
+                                    { key: 'canEditCategory', label: 'Kategori', desc: 'Izin ubah kategori produk' },
+                                    { key: 'canEditType', label: 'Tipe Produk', desc: 'Izin ubah tipe / varian' },
+                                    { key: 'canEditImages', label: 'Foto & Galeri Produk', desc: 'Izin upload / ganti foto' },
+                                    { key: 'canEditDescription', label: 'Deskripsi Produk', desc: 'Izin ubah teks deskripsi' },
+                                    { key: 'canEditFavoriteRank', label: 'Favorit Bulan Ini', desc: 'Izin atur rank 1 s/d 20' },
+                                  ].map((item) => {
+                                    const k = item.key as keyof AdminPermissions;
+                                    const active = Boolean(editAdminPermissions[k]);
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={item.key}
+                                        onClick={() =>
+                                          setEditAdminPermissions((prev) => ({
+                                            ...prev,
+                                            [k]: !prev[k],
+                                          }))
+                                        }
+                                        className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                                          active
+                                            ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 shadow-sm'
+                                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                                        }`}
+                                      >
+                                        <div
+                                          className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
+                                            active ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-900'
+                                          }`}
+                                        >
+                                          {active && <Check className="w-3 h-3 stroke-[3]" />}
+                                        </div>
+                                        <div>
+                                          <div className="font-bold text-xs text-white">{item.label}</div>
+                                          <div className="text-[10px] text-slate-400 leading-snug">{item.desc}</div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              <div>
+                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block mb-2">
+                                  2. Aksi & Operasi Katalog
+                                </span>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                                  {[
+                                    { key: 'canCreateProduct', label: 'Tambah Produk Baru', desc: 'Izin buat produk baru' },
+                                    { key: 'canDeleteProduct', label: 'Hapus Produk', desc: 'Izin hapus produk' },
+                                    { key: 'canImportCsv', label: 'Import CSV / Sheets', desc: 'Izin import CSV massal' },
+                                  ].map((item) => {
+                                    const k = item.key as keyof AdminPermissions;
+                                    const active = Boolean(editAdminPermissions[k]);
+                                    return (
+                                      <button
+                                        type="button"
+                                        key={item.key}
+                                        onClick={() =>
+                                          setEditAdminPermissions((prev) => ({
+                                            ...prev,
+                                            [k]: !prev[k],
+                                          }))
+                                        }
+                                        className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition-all ${
+                                          active
+                                            ? 'bg-emerald-950/60 border-emerald-500/60 text-emerald-200 shadow-sm'
+                                            : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:border-slate-700'
+                                        }`}
+                                      >
+                                        <div
+                                          className={`mt-0.5 w-4 h-4 rounded flex items-center justify-center shrink-0 border ${
+                                            active ? 'bg-emerald-500 border-emerald-400 text-slate-950' : 'border-slate-600 bg-slate-900'
+                                          }`}
+                                        >
+                                          {active && <Check className="w-3 h-3 stroke-[3]" />}
+                                        </div>
+                                        <div>
+                                          <div className="font-bold text-xs text-white">{item.label}</div>
+                                          <div className="text-[10px] text-slate-400 leading-snug">{item.desc}</div>
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="p-2.5 rounded-xl bg-slate-950/80 border border-slate-800 text-[11px] text-slate-400 flex items-center gap-2">
+                              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span>
+                                <strong>Catatan:</strong> Bidang <em>Harga Normal</em>, <em>Harga Diskon</em>, <em>Jumlah Stok Barang</em>, dan <em>Satuan Packing Grosir</em> selalu aktif untuk diedit oleh semua admin.
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="flex justify-end gap-2 pt-2 border-t border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => setEditingAdminUser(null)}
+                            className="px-4 py-2 rounded-xl bg-slate-700 text-slate-300 font-semibold"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            type="submit"
+                            className="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold"
+                          >
+                            Simpan Perubahan Hak Akses
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  )}
+
+                  {/* List of Registered Admin Accounts */}
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-bold text-white">Daftar Akun Admin Terdaftar</h3>
+                    <div className="rounded-2xl border border-slate-800 overflow-hidden bg-slate-950/70">
+                      <table className="w-full text-left text-xs text-slate-300">
+                        <thead className="bg-slate-800/80 text-slate-200 uppercase text-[10px] font-bold">
+                          <tr>
+                            <th className="p-3">Username & Nama</th>
+                            <th className="p-3">Peran / Hak Akses</th>
+                            <th className="p-3">Batasan Editing</th>
+                            <th className="p-3">Terakhir Login</th>
+                            <th className="p-3 text-right">Aksi</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800">
+                          {adminUsersList.map((usr) => (
+                            <tr key={usr.id} className="hover:bg-slate-800/40">
+                              <td className="p-3">
+                                <div className="font-bold text-white">{usr.fullName}</div>
+                                <span className="text-[10px] text-slate-400 font-mono">@{usr.username}</span>
+                              </td>
+                              <td className="p-3">
+                                {usr.role === 'manager' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] border border-amber-500/30">
+                                    Manager (Superadmin)
+                                  </span>
+                                )}
+                                {usr.role === 'admin_full' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
+                                    Admin Penuh (Full)
+                                  </span>
+                                )}
+                                {usr.role === 'admin_partial' && (
+                                  <span className="px-2 py-0.5 rounded-full bg-sky-500/20 text-sky-300 font-bold text-[10px] border border-sky-500/30">
+                                    Admin Terbatas (Partial)
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 text-[11px]">
+                                {usr.role === 'admin_partial' ? (
+                                  <div className="space-y-1">
+                                    <div className="text-amber-300 font-semibold text-[11px]">
+                                      Admin Terbatas (Kustom)
+                                    </div>
+                                    <div className="flex flex-wrap gap-1 max-w-xs">
+                                      <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/30 text-[9px] font-medium">
+                                        Harga & Stok
+                                      </span>
+                                      {usr.permissions?.canEditName && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-500/30 text-[9px]">
+                                          Nama
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canEditBrand && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-500/30 text-[9px]">
+                                          Merk
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canEditCategory && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-500/30 text-[9px]">
+                                          Kategori
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canEditType && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-500/30 text-[9px]">
+                                          Tipe
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canEditImages && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-500/30 text-[9px]">
+                                          Foto
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canEditDescription && (
+                                        <span className="px-1.5 py-0.5 rounded bg-sky-950/80 text-sky-300 border border-sky-500/30 text-[9px]">
+                                          Deskripsi
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canCreateProduct && (
+                                        <span className="px-1.5 py-0.5 rounded bg-purple-950/80 text-purple-300 border border-purple-500/30 text-[9px]">
+                                          + Tambah
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canDeleteProduct && (
+                                        <span className="px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-300 border border-rose-500/30 text-[9px]">
+                                          - Hapus
+                                        </span>
+                                      )}
+                                      {usr.permissions?.canImportCsv && (
+                                        <span className="px-1.5 py-0.5 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-500/30 text-[9px]">
+                                          CSV
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span className="text-emerald-400 font-medium">
+                                    Akses Seluruh Detail & Aksi
+                                  </span>
+                                )}
+                              </td>
+                              <td className="p-3 text-[10px] text-slate-400">
+                                {usr.lastLogin ? new Date(usr.lastLogin).toLocaleString('id-ID') : 'Belum pernah'}
+                              </td>
+                              <td className="p-3 text-right">
+                                <div className="inline-flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => {
+                                      setEditingAdminUser(usr);
+                                      setEditAdminRole(usr.role);
+                                      setEditAdminPassword('');
+                                      setEditAdminPermissions(
+                                        usr.permissions || {
+                                          canEditName: false,
+                                          canEditBrand: false,
+                                          canEditCategory: false,
+                                          canEditType: false,
+                                          canEditImages: false,
+                                          canEditDescription: false,
+                                          canEditFavoriteRank: false,
+                                          canCreateProduct: false,
+                                          canDeleteProduct: false,
+                                          canImportCsv: false,
+                                        }
+                                      );
+                                    }}
+                                    className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                    title="Edit Hak Akses / Reset Password"
+                                  >
+                                    <Edit className="w-3.5 h-3.5" />
+                                  </button>
+                                  {usr.username !== 'admin' && usr.username !== currentAdmin.username && (
+                                    <button
+                                      onClick={() => handleDeleteAdminUser(usr.id, usr.fullName)}
+                                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/50 text-rose-400"
+                                      title="Hapus Akun Admin"
+                                    >
+                                      <Trash2 className="w-3.5 h-3.5" />
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}

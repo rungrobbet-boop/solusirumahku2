@@ -8,6 +8,7 @@ import {
   CustomManualFeature,
   StoreSettings,
   AdminUser,
+  AdminPermissions,
   CartItem,
 } from '../types';
 import {
@@ -415,6 +416,119 @@ class StorageService {
     return { success: true };
   }
 
+  // --- Admin Management (By Manager) ---
+  createAdminUserByManager(
+    managerUser: AdminUser,
+    newAdmin: {
+      username: string;
+      fullName: string;
+      role: 'manager' | 'admin_full' | 'admin_partial';
+      password: string;
+      permissions?: AdminPermissions;
+    }
+  ): { success: boolean; admin?: AdminUser; error?: string } {
+    if (managerUser.role !== 'manager') {
+      return { success: false, error: 'Hanya akun dengan akses Manager yang dapat mendaftarkan admin baru.' };
+    }
+
+    if (!newAdmin.username || newAdmin.username.trim().length < 3) {
+      return { success: false, error: 'Username minimal 3 karakter.' };
+    }
+
+    const validation = validateAdminPassword(newAdmin.password);
+    if (!validation.isValid) {
+      return { success: false, error: validation.message };
+    }
+
+    const users = this.getAdminUsers();
+    if (users.some((u) => u.username.toLowerCase() === newAdmin.username.trim().toLowerCase())) {
+      return { success: false, error: 'Username sudah digunakan. Silakan pilih username lain.' };
+    }
+
+    const created: AdminUser = {
+      id: `admin-${Date.now()}`,
+      username: newAdmin.username.trim(),
+      fullName: newAdmin.fullName.trim() || 'Admin Solusi Rumahku',
+      role: newAdmin.role,
+      permissions: newAdmin.permissions,
+      createdAt: new Date().toISOString(),
+      createdBy: managerUser.username,
+    };
+
+    const updatedUsers = [...users, created];
+    this.set(STORAGE_KEYS.ADMIN_USERS, updatedUsers);
+
+    const passwords = this.getAdminPasswords();
+    passwords[newAdmin.username.trim().toLowerCase()] = newAdmin.password;
+    this.set(STORAGE_KEYS.ADMIN_PASSWORDS, passwords);
+
+    return { success: true, admin: created };
+  }
+
+  updateAdminUserByManager(
+    managerUser: AdminUser,
+    targetAdmin: AdminUser,
+    newPassword?: string
+  ): { success: boolean; error?: string } {
+    if (managerUser.role !== 'manager') {
+      return { success: false, error: 'Hanya Manager yang dapat mengubah data user admin.' };
+    }
+
+    if (newPassword && newPassword.trim()) {
+      const validation = validateAdminPassword(newPassword);
+      if (!validation.isValid) {
+        return { success: false, error: validation.message };
+      }
+      const passwords = this.getAdminPasswords();
+      passwords[targetAdmin.username.toLowerCase()] = newPassword;
+      this.set(STORAGE_KEYS.ADMIN_PASSWORDS, passwords);
+    }
+
+    const users = this.getAdminUsers();
+    const updatedUsers = users.map((u) => (u.id === targetAdmin.id ? { ...u, ...targetAdmin } : u));
+    this.set(STORAGE_KEYS.ADMIN_USERS, updatedUsers);
+
+    // If updating current logged in user
+    const current = this.getCurrentAdmin();
+    if (current && current.id === targetAdmin.id) {
+      this.setCurrentAdmin({ ...current, ...targetAdmin });
+    }
+
+    return { success: true };
+  }
+
+  deleteAdminUserByManager(
+    managerUser: AdminUser,
+    targetAdminId: string
+  ): { success: boolean; error?: string } {
+    if (managerUser.role !== 'manager') {
+      return { success: false, error: 'Hanya Manager yang dapat menghapus user admin.' };
+    }
+
+    if (managerUser.id === targetAdminId) {
+      return { success: false, error: 'Tidak dapat menghapus akun Anda sendiri yang sedang aktif.' };
+    }
+
+    const users = this.getAdminUsers();
+    const target = users.find((u) => u.id === targetAdminId);
+    if (!target) {
+      return { success: false, error: 'User admin tidak ditemukan.' };
+    }
+
+    if (target.username.toLowerCase() === 'admin' && users.filter((u) => u.role === 'manager').length <= 1) {
+      return { success: false, error: 'Akun manajer utama tidak dapat dihapus.' };
+    }
+
+    const updatedUsers = users.filter((u) => u.id !== targetAdminId);
+    this.set(STORAGE_KEYS.ADMIN_USERS, updatedUsers);
+
+    const passwords = this.getAdminPasswords();
+    delete passwords[target.username.toLowerCase()];
+    this.set(STORAGE_KEYS.ADMIN_PASSWORDS, passwords);
+
+    return { success: true };
+  }
+
   logoutAdmin(): void {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_ADMIN);
   }
@@ -436,7 +550,7 @@ class StorageService {
   } {
     const products = this.getProducts();
     const settings = this.getSettings();
-    const threshold = settings.lowStockThreshold || 5;
+    const threshold = settings.lowStockThreshold || 20;
 
     const lowStockProducts = products.filter(
       (p) => typeof p.stockCount === 'number' && p.stockCount > 0 && p.stockCount <= threshold

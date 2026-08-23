@@ -218,16 +218,33 @@ export default function App() {
   }, [products, headerSearch]);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-emerald-200 selection:text-emerald-950">
+    <div
+      className={`min-h-screen text-slate-900 flex flex-col font-sans selection:bg-emerald-200 selection:text-emerald-950 ${
+        settings.pageBackgroundPattern === 'grid'
+          ? 'bg-slate-50 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]'
+          : settings.pageBackgroundPattern === 'dots'
+          ? 'bg-slate-50 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px]'
+          : 'bg-slate-50'
+      }`}
+      style={
+        settings.pageBackgroundPattern === 'custom_image' && settings.pageBackgroundImageUrl
+          ? {
+              backgroundImage: `linear-gradient(rgba(248, 250, 252, 0.94), rgba(248, 250, 252, 0.94)), url(${settings.pageBackgroundImageUrl})`,
+              backgroundSize: 'cover',
+              backgroundAttachment: 'fixed',
+            }
+          : undefined
+      }
+    >
       {/* Top Announcement Bar */}
       <div className="bg-[#064e3b] text-white text-[11px] sm:text-xs py-2 px-4 border-b border-emerald-800">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 truncate">
             <span className="bg-emerald-500/20 text-emerald-300 font-bold px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">
-              Resmi &amp; Terpercaya
+              {settings.topAnnouncementBadge || 'Resmi & Terpercaya'}
             </span>
             <span className="truncate">
-              {settings.storeName} • Pusat Peralatan Listrik, Kerja Teknik &amp; Rumah Tangga SNI
+              {settings.topAnnouncementText || `${settings.storeName} • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI`}
             </span>
           </div>
 
@@ -263,7 +280,13 @@ export default function App() {
               }}
               className="cursor-pointer shrink-0"
             >
-              <Logo size="md" />
+              <Logo
+                size="md"
+                customLogoUrl={settings.customLogoUrl}
+                textPrefix={settings.logoTextPrefix || 'SOLUSI'}
+                textSuffix={settings.logoTextSuffix || 'RUMAHKU'}
+                storeName={settings.storeName}
+              />
             </div>
 
             {/* Global Search Bar with Autocomplete Dropdown */}
@@ -537,19 +560,41 @@ export default function App() {
           <div>
             {/* Hero Banner with Highlights */}
             <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-2">
-              <div className="rounded-3xl bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#065f46] text-white p-6 sm:p-10 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6">
+              <div
+                className={`rounded-3xl text-white p-6 sm:p-10 shadow-lg relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 ${
+                  settings.heroThemeGradient === 'dark'
+                    ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800'
+                    : settings.heroThemeGradient === 'navy'
+                    ? 'bg-gradient-to-br from-blue-950 via-indigo-950 to-slate-900'
+                    : settings.heroThemeGradient === 'amber'
+                    ? 'bg-gradient-to-br from-amber-950 via-orange-900 to-slate-900'
+                    : settings.heroThemeGradient === 'slate'
+                    ? 'bg-gradient-to-br from-slate-800 via-slate-700 to-slate-900'
+                    : 'bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#065f46]'
+                }`}
+                style={
+                  settings.heroBackgroundUrl
+                    ? {
+                        backgroundImage: `linear-gradient(rgba(6, 78, 59, 0.88), rgba(6, 95, 70, 0.88)), url(${settings.heroBackgroundUrl})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                      }
+                    : undefined
+                }
+              >
                 <div className="max-w-xl z-10">
                   <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-emerald-100 text-xs font-bold uppercase tracking-wider backdrop-blur-xs mb-3">
                     <Sparkles className="w-3.5 h-3.5" />
-                    Distributor Resmi &amp; Garansi SNI
+                    {settings.heroBadge || 'Distributor Resmi & Garansi SNI'}
                   </div>
 
                   <h1 className="text-2xl sm:text-4xl font-black tracking-tight leading-tight mb-3">
-                    Solusi Terlengkap Alat Listrik, Perkakas Teknik &amp; Rumah Tangga
+                    {settings.heroTitle || 'Solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga'}
                   </h1>
 
                   <p className="text-xs sm:text-base text-emerald-100/90 leading-relaxed mb-6">
-                    Pilihan terbaik lampu LED hemat energi, saklar, fitting, mesin bor, kabel berkualitas, hingga perlengkapan dapur &amp; kamar mandi siap kirim ke seluruh Indonesia.
+                    {settings.heroSubtitle ||
+                      'Pilihan terbaik lampu LED hemat energi, saklar, fitting, mesin bor, kabel berkualitas, hingga perlengkapan dapur & kamar mandi siap kirim ke seluruh Indonesia.'}
                   </p>
 
                   <div className="flex flex-wrap items-center gap-3">
@@ -557,7 +602,7 @@ export default function App() {
                       onClick={() => setActiveTab('categories')}
                       className="px-5 py-3 rounded-2xl bg-white text-[#064e3b] hover:bg-emerald-50 text-xs sm:text-sm font-bold shadow-md transition-all active:scale-98 flex items-center gap-2"
                     >
-                      <span>Lihat Semua Kategori</span>
+                      <span>{settings.heroCta1Text || 'Lihat Semua Kategori'}</span>
                       <ArrowRight className="w-4 h-4" />
                     </button>
 
@@ -566,34 +611,64 @@ export default function App() {
                       className="px-5 py-3 rounded-2xl bg-[#15803d] hover:bg-[#166534] text-white text-xs sm:text-sm font-bold shadow-md transition-all active:scale-98 flex items-center gap-2"
                     >
                       <MessageCircle className="w-4 h-4 fill-white text-[#15803d]" />
-                      <span>Chat WhatsApp CS</span>
+                      <span>{settings.heroCta2Text || 'Chat WhatsApp CS'}</span>
                     </button>
                   </div>
                 </div>
 
-                {/* Hero Feature Badges */}
-                <div className="grid grid-cols-2 gap-3 z-10 shrink-0 w-full md:w-auto">
-                  <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
-                    <ShieldCheck className="w-5 h-5 text-emerald-300 mb-1" />
-                    <strong className="text-xs text-white block">100% Original</strong>
-                    <span className="text-[10px] text-emerald-100">Philips, Bosch, dsb</span>
+                {/* Hero Media (Image / Video) OR Feature Badges */}
+                {settings.heroMediaType === 'video' && settings.heroMediaUrl ? (
+                  <div className="z-10 shrink-0 w-full md:w-80 rounded-2xl overflow-hidden shadow-2xl border border-white/20 bg-black/40 aspect-video flex items-center justify-center">
+                    {settings.heroMediaUrl.includes('youtube.com') || settings.heroMediaUrl.includes('youtu.be') ? (
+                      <iframe
+                        src={settings.heroMediaUrl.replace('watch?v=', 'embed/')}
+                        title="Hero Video"
+                        className="w-full h-full border-0"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    ) : (
+                      <video
+                        src={settings.heroMediaUrl}
+                        controls
+                        className="w-full h-full object-cover"
+                      />
+                    )}
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-300 mb-1" />
-                    <strong className="text-xs text-white block">Standar SNI</strong>
-                    <span className="text-[10px] text-emerald-100">Instalasi Aman</span>
+                ) : settings.heroMediaType === 'image' && settings.heroMediaUrl ? (
+                  <div className="z-10 shrink-0 w-full md:w-80 rounded-2xl overflow-hidden shadow-2xl border border-white/20">
+                    <img
+                      src={settings.heroMediaUrl}
+                      alt={settings.heroTitle || 'Banner Toko'}
+                      className="w-full h-52 object-cover"
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
-                    <Clock className="w-5 h-5 text-emerald-300 mb-1" />
-                    <strong className="text-xs text-white block">Proses Cepat</strong>
-                    <span className="text-[10px] text-emerald-100">Langsung Kirim</span>
+                ) : (
+                  /* Hero Feature Badges Default */
+                  <div className="grid grid-cols-2 gap-3 z-10 shrink-0 w-full md:w-auto">
+                    <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+                      <ShieldCheck className="w-5 h-5 text-emerald-300 mb-1" />
+                      <strong className="text-xs text-white block">100% Original</strong>
+                      <span className="text-[10px] text-emerald-100">Philips, Bosch, dsb</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-300 mb-1" />
+                      <strong className="text-xs text-white block">Standar SNI</strong>
+                      <span className="text-[10px] text-emerald-100">Instalasi Aman</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+                      <Clock className="w-5 h-5 text-emerald-300 mb-1" />
+                      <strong className="text-xs text-white block">Proses Cepat</strong>
+                      <span className="text-[10px] text-emerald-100">Langsung Kirim</span>
+                    </div>
+                    <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
+                      <Sparkles className="w-5 h-5 text-emerald-300 mb-1" />
+                      <strong className="text-xs text-white block">Harga Terbaik</strong>
+                      <span className="text-[10px] text-emerald-100">Grosir &amp; Retail</span>
+                    </div>
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-white/10 border border-white/20 backdrop-blur-sm">
-                    <Sparkles className="w-5 h-5 text-emerald-300 mb-1" />
-                    <strong className="text-xs text-white block">Harga Terbaik</strong>
-                    <span className="text-[10px] text-emerald-100">Grosir &amp; Retail</span>
-                  </div>
-                </div>
+                )}
 
                 {/* Ambient glow */}
                 <div className="absolute right-0 bottom-0 translate-x-12 translate-y-12 w-80 h-80 rounded-full bg-emerald-400/10 blur-2xl pointer-events-none" />
