@@ -43,6 +43,12 @@ import {
   Unlock,
   ShieldCheck,
   Check,
+  Star,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Type,
+  Layout,
 } from 'lucide-react';
 import {
   Product,
@@ -82,18 +88,31 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [currentAdmin, setCurrentAdmin] = useState<AdminUser | null>(storage.getCurrentAdmin());
   const [authMode, setAuthMode] = useState<'choose' | 'login' | 'register'>('choose');
 
-  // Login form
-  const [loginUsername, setLoginUsername] = useState('admin');
-  const [loginPassword, setLoginPassword] = useState('Admin2026');
+  // Login form - initialized empty for security on shared devices
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // Register form
+  // Register form - initialized empty for security on shared devices
   const [regAccessCode, setRegAccessCode] = useState('');
   const [regUsername, setRegUsername] = useState('');
   const [regFullName, setRegFullName] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regError, setRegError] = useState('');
   const [isAccessCodeVerified, setIsAccessCodeVerified] = useState(false);
+
+  // Helper to completely clear sensitive auth inputs
+  const clearAuthInputs = () => {
+    setLoginUsername('');
+    setLoginPassword('');
+    setLoginError('');
+    setRegAccessCode('');
+    setRegUsername('');
+    setRegFullName('');
+    setRegPassword('');
+    setRegError('');
+    setIsAccessCodeVerified(false);
+  };
 
   // Active Admin Tab
   const [activeTab, setActiveTab] = useState<
@@ -112,15 +131,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   >('dashboard');
 
   // Loaded Datasets
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<CategoryItem[]>([]);
-  const [brands, setBrands] = useState<BrandItem[]>([]);
-  const [productTypes, setProductTypes] = useState<ProductTypeItem[]>([]);
-  const [infoTrends, setInfoTrends] = useState<InfoTrendItem[]>([]);
-  const [galleryMedia, setGalleryMedia] = useState<GalleryMediaItem[]>([]);
-  const [customFeatures, setCustomFeatures] = useState<CustomManualFeature[]>([]);
-  const [settings, setSettings] = useState<StoreSettings>(storage.getSettings());
-  const [adminUsersList, setAdminUsersList] = useState<AdminUser[]>(storage.getAdminUsers());
+  const [products, setProducts] = useState<Product[]>(() => storage.getProducts());
+  const [categories, setCategories] = useState<CategoryItem[]>(() => storage.getCategories());
+  const [brands, setBrands] = useState<BrandItem[]>(() => storage.getBrands());
+  const [productTypes, setProductTypes] = useState<ProductTypeItem[]>(() => storage.getProductTypes());
+  const [infoTrends, setInfoTrends] = useState<InfoTrendItem[]>(() => storage.getInfoTrends());
+  const [galleryMedia, setGalleryMedia] = useState<GalleryMediaItem[]>(() => storage.getGalleryMedia());
+  const [customFeatures, setCustomFeatures] = useState<CustomManualFeature[]>(() => storage.getCustomFeatures());
+  const [settings, setSettings] = useState<StoreSettings>(() => storage.getSettings());
+  const [adminUsersList, setAdminUsersList] = useState<AdminUser[]>(() => storage.getAdminUsers());
+  const [productStockFilter, setProductStockFilter] = useState<'all' | 'low' | 'unspecified' | 'available' | 'favorite'>('all');
 
   // User Management State (Manager Only)
   const [newAdminUsername, setNewAdminUsername] = useState('');
@@ -224,8 +244,26 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       loadAllData();
+      clearAuthInputs();
+    } else {
+      clearAuthInputs();
     }
   }, [isOpen]);
+
+  // Clear sensitive fields when switching admin tabs
+  useEffect(() => {
+    setOldPassword('');
+    setNewPassword('');
+    setConfirmPassword('');
+    setPasswordChangeSuccess('');
+    setPasswordChangeError('');
+    setNewAdminUsername('');
+    setNewAdminFullName('');
+    setNewAdminPassword('');
+    setAdminUserError('');
+    setAdminUserSuccess('');
+    setEditAdminPassword('');
+  }, [activeTab]);
 
   const showSuccessFeedback = (msg: string) => {
     setActionSuccessMessage(msg);
@@ -254,6 +292,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
     setLoginError('');
     const res = storage.loginAdmin(loginUsername, loginPassword);
     if (res.success && res.admin) {
+      clearAuthInputs();
       setCurrentAdmin(res.admin);
       loadAllData();
       showSuccessFeedback(`Selamat datang, ${res.admin.fullName}!`);
@@ -282,6 +321,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
       regPassword
     );
     if (res.success && res.admin) {
+      clearAuthInputs();
       setCurrentAdmin(res.admin);
       loadAllData();
       showSuccessFeedback(`Registrasi manajer berhasil! Selamat datang, ${res.admin.fullName}.`);
@@ -293,6 +333,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const handleLogout = () => {
     storage.logoutAdmin();
     setCurrentAdmin(null);
+    clearAuthInputs();
     setAuthMode('choose');
   };
 
@@ -420,7 +461,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
   // --- Stock Alert Stats ---
   const stockNotifications = useMemo(() => {
-    return storage.getStockNotifications();
+    return storage.getStockNotifications(products, settings.lowStockThreshold);
   }, [products, settings.lowStockThreshold]);
 
   if (!isOpen) return null;
@@ -927,27 +968,88 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                   {/* Quick Metric Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                      <span className="text-xs text-slate-400">Total Katalog Produk</span>
+                    <div
+                      onClick={() => {
+                        setProductStockFilter('all');
+                        setProductSearchQuery('');
+                        setActiveTab('products');
+                      }}
+                      className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-emerald-500/50 hover:bg-slate-800 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400 group-hover:text-slate-300">Total Katalog Produk</span>
+                        <Package className="w-4 h-4 text-slate-500 group-hover:text-emerald-400 transition-colors" />
+                      </div>
                       <p className="text-2xl font-black text-white mt-1">{products.length}</p>
+                      <span className="text-[10px] text-emerald-400 flex items-center gap-1 mt-1 font-medium">
+                        Lihat semua &rarr;
+                      </span>
                     </div>
-                    <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                      <span className="text-xs text-slate-400">Produk Favorit Terdaftar</span>
+
+                    <div
+                      onClick={() => {
+                        setProductStockFilter('favorite');
+                        setProductSearchQuery('');
+                        setActiveTab('products');
+                      }}
+                      className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-amber-500/50 hover:bg-slate-800 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-slate-400 group-hover:text-slate-300">Produk Favorit</span>
+                        <Star className="w-4 h-4 text-amber-500/60 group-hover:text-amber-400 transition-colors" />
+                      </div>
                       <p className="text-2xl font-black text-amber-400 mt-1">
-                        {products.filter((p) => p.isFavoriteMonthRank).length} / 20
+                        {products.filter((p) => p.isFavoriteMonthRank).length} <span className="text-xs text-slate-500 font-normal">/ 20</span>
                       </p>
+                      <span className="text-[10px] text-amber-400 flex items-center gap-1 mt-1 font-medium">
+                        Kelola ranking &rarr;
+                      </span>
                     </div>
-                    <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                      <span className="text-xs text-slate-400">Stok Menipis (&le; {settings.lowStockThreshold || 20})</span>
-                      <p className="text-2xl font-black text-amber-500 mt-1">
+
+                    <div
+                      onClick={() => {
+                        setProductStockFilter('low');
+                        setProductSearchQuery('');
+                        setActiveTab('products');
+                      }}
+                      className={`p-4 rounded-2xl border transition-all cursor-pointer group ${
+                        stockNotifications.lowStockProducts.length > 0
+                          ? 'bg-amber-950/20 border-amber-500/40 hover:border-amber-400 hover:bg-amber-950/30'
+                          : 'bg-slate-800/90 border-slate-700 hover:border-amber-500/50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-amber-300 font-semibold">
+                          Stok Menipis (&le; {settings.lowStockThreshold || 20})
+                        </span>
+                        <AlertTriangle className="w-4 h-4 text-amber-400 animate-pulse" />
+                      </div>
+                      <p className="text-2xl font-black text-amber-400 mt-1">
                         {stockNotifications.lowStockProducts.length}
                       </p>
+                      <span className="text-[10px] text-amber-300 flex items-center gap-1 mt-1 font-medium">
+                        {stockNotifications.lowStockProducts.length > 0 ? 'Perlu Restock \u2192' : 'Stok Aman \u2192'}
+                      </span>
                     </div>
-                    <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                      <span className="text-xs text-slate-400">Status &ldquo;Tanya Admin&rdquo;</span>
+
+                    <div
+                      onClick={() => {
+                        setProductStockFilter('unspecified');
+                        setProductSearchQuery('');
+                        setActiveTab('products');
+                      }}
+                      className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-sky-500/50 hover:bg-slate-800 transition-all cursor-pointer group"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-sky-300 font-semibold">Tanya Admin (Kosong)</span>
+                        <HelpCircle className="w-4 h-4 text-sky-400" />
+                      </div>
                       <p className="text-2xl font-black text-sky-400 mt-1">
                         {stockNotifications.unspecifiedStockProducts.length}
                       </p>
+                      <span className="text-[10px] text-sky-300 flex items-center gap-1 mt-1 font-medium">
+                        Isi Stok &rarr;
+                      </span>
                     </div>
                   </div>
 
@@ -1638,24 +1740,89 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     </div>
                   )}
 
-                  {/* Search Bar for Products in Admin */}
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type="text"
-                      value={productSearchQuery}
-                      onChange={(e) => setProductSearchQuery(e.target.value)}
-                      placeholder="Cari produk berdasarkan nama, merk, kategori, atau tipe..."
-                      className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    />
-                    {productSearchQuery && (
+                  {/* Search Bar & Stock Filter Chips for Products in Admin */}
+                  <div className="space-y-2.5">
+                    <div className="relative">
+                      <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                      <input
+                        type="text"
+                        value={productSearchQuery}
+                        onChange={(e) => setProductSearchQuery(e.target.value)}
+                        placeholder="Cari produk berdasarkan nama, merk, kategori, atau tipe..."
+                        className="w-full pl-10 pr-9 py-2.5 rounded-xl bg-slate-950 border border-slate-700 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                      {productSearchQuery && (
+                        <button
+                          onClick={() => setProductSearchQuery('')}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Filter Tabs / Quick Chips */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
+                      <span className="text-[11px] text-slate-400 font-semibold shrink-0">Filter Status:</span>
                       <button
-                        onClick={() => setProductSearchQuery('')}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white"
+                        type="button"
+                        onClick={() => setProductStockFilter('all')}
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+                          productStockFilter === 'all'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-slate-800/80 text-slate-300 hover:bg-slate-700'
+                        }`}
                       >
-                        <X className="w-3.5 h-3.5" />
+                        Semua ({products.length})
                       </button>
-                    )}
+                      <button
+                        type="button"
+                        onClick={() => setProductStockFilter('low')}
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                          productStockFilter === 'low'
+                            ? 'bg-amber-500 text-slate-950 shadow-xs ring-2 ring-amber-400'
+                            : 'bg-amber-950/40 text-amber-300 border border-amber-500/40 hover:bg-amber-950/60'
+                        }`}
+                      >
+                        <AlertTriangle className="w-3.5 h-3.5" />
+                        Stok Menipis &le; {settings.lowStockThreshold || 20} ({stockNotifications.lowStockProducts.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProductStockFilter('unspecified')}
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5 ${
+                          productStockFilter === 'unspecified'
+                            ? 'bg-sky-500 text-slate-950 shadow-xs ring-2 ring-sky-400'
+                            : 'bg-sky-950/40 text-sky-300 border border-sky-500/40 hover:bg-sky-950/60'
+                        }`}
+                      >
+                        <HelpCircle className="w-3.5 h-3.5" />
+                        Tanya Admin ({stockNotifications.unspecifiedStockProducts.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProductStockFilter('available')}
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 ${
+                          productStockFilter === 'available'
+                            ? 'bg-emerald-700 text-white shadow-xs ring-2 ring-emerald-400'
+                            : 'bg-slate-800/80 text-emerald-400 hover:bg-slate-700'
+                        }`}
+                      >
+                        Stok Aman ({products.length - stockNotifications.lowStockProducts.length - stockNotifications.unspecifiedStockProducts.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setProductStockFilter('favorite')}
+                        className={`px-3 py-1.5 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1 ${
+                          productStockFilter === 'favorite'
+                            ? 'bg-amber-400 text-slate-950 shadow-xs'
+                            : 'bg-slate-800/80 text-amber-400 hover:bg-slate-700'
+                        }`}
+                      >
+                        <Star className="w-3.5 h-3.5 fill-amber-400" />
+                        Favorit ({products.filter((p) => p.isFavoriteMonthRank).length})
+                      </button>
+                    </div>
                   </div>
 
                   {/* Product Form Modal / Editor */}
@@ -2026,6 +2193,27 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         <tbody className="divide-y divide-slate-800">
                           {products
                             .filter((p) => {
+                              // Filter based on selected stock filter
+                              if (productStockFilter === 'low') {
+                                const num = typeof p.stockCount === 'number' ? p.stockCount : Number(p.stockCount);
+                                if (p.stockCount === null || p.stockCount === undefined || (p.stockCount as unknown) === '') return false;
+                                const threshold = settings.lowStockThreshold || 20;
+                                if (isNaN(num) || num <= 0 || num > threshold) return false;
+                              } else if (productStockFilter === 'unspecified') {
+                                if (p.stockCount !== null && p.stockCount !== undefined && (p.stockCount as unknown) !== '') {
+                                  const num = typeof p.stockCount === 'number' ? p.stockCount : Number(p.stockCount);
+                                  if (!isNaN(num) && num > 0) return false;
+                                }
+                              } else if (productStockFilter === 'available') {
+                                if (p.stockCount === null || p.stockCount === undefined || (p.stockCount as unknown) === '') return false;
+                                const num = typeof p.stockCount === 'number' ? p.stockCount : Number(p.stockCount);
+                                const threshold = settings.lowStockThreshold || 20;
+                                if (isNaN(num) || num <= threshold) return false;
+                              } else if (productStockFilter === 'favorite') {
+                                if (!p.isFavoriteMonthRank) return false;
+                              }
+
+                              // Search query filter
                               if (!productSearchQuery.trim()) return true;
                               const q = productSearchQuery.toLowerCase().trim();
                               return (
@@ -2946,12 +3134,14 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         />
                       </div>
                       <div>
-                        <label className="font-semibold text-slate-300 block mb-1">Batas Peringatan Stok Minimum</label>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Batas Peringatan Stok Minimum (&le; Unit)
+                        </label>
                         <input
                           type="number"
-                          value={settings.lowStockThreshold}
-                          onChange={(e) => setSettings({ ...settings, lowStockThreshold: Number(e.target.value) })}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                          value={settings.lowStockThreshold || 20}
+                          onChange={(e) => setSettings({ ...settings, lowStockThreshold: Number(e.target.value) || 20 })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold"
                         />
                       </div>
                     </div>

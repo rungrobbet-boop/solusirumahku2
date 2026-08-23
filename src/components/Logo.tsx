@@ -3,43 +3,62 @@ import React from 'react';
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  customPx?: number;
   showText?: boolean;
   textClassName?: string;
   customLogoUrl?: string;
   textPrefix?: string;
   textSuffix?: string;
   storeName?: string;
+  tagline?: string;
+  layout?: 'horizontal' | 'vertical';
+  align?: 'left' | 'center' | 'right';
+  textColorMode?: 'light' | 'dark';
 }
 
 export const Logo: React.FC<LogoProps> = ({
   className = '',
   size = 'lg',
+  customPx,
   showText = true,
   textClassName = '',
   customLogoUrl,
   textPrefix = 'SOLUSI',
   textSuffix = 'RUMAHKU',
   storeName,
+  tagline,
+  layout = 'horizontal',
+  align = 'left',
+  textColorMode = 'light',
 }) => {
-  const sizeMap = {
-    sm: 'w-10 h-10',
-    md: 'w-14 h-14',
-    lg: 'w-18 h-18',
-    xl: 'w-28 h-28',
-  };
-
   const iconSizeMap = {
     sm: 40,
     md: 56,
     lg: 72,
-    xl: 112,
+    xl: 96,
   };
 
-  const px = iconSizeMap[size];
+  const calculatedPx = customPx && customPx > 0 ? customPx : iconSizeMap[size] || 56;
+
+  // Alignment classes
+  const alignContainerClass =
+    align === 'center'
+      ? 'items-center text-center justify-center'
+      : align === 'right'
+      ? 'items-end text-right justify-end'
+      : 'items-start text-left justify-start';
+
+  const flexDirClass = layout === 'vertical' ? 'flex-col' : 'flex-row items-center';
 
   return (
-    <div className={`inline-flex items-center gap-3 select-none ${className}`} id="brand-logo-container">
-      <div className={`relative shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-[#065f46]/20 p-1.5 overflow-hidden ${sizeMap[size]}`}>
+    <div
+      className={`inline-flex ${flexDirClass} ${layout === 'vertical' ? alignContainerClass : 'items-center'} gap-3 select-none ${className}`}
+      id="brand-logo-container"
+    >
+      <div
+        className="relative shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xs ring-1 ring-[#065f46]/20 p-1.5 overflow-hidden transition-all"
+        style={{ width: `${calculatedPx}px`, height: `${calculatedPx}px` }}
+      >
         {customLogoUrl ? (
           <img
             src={customLogoUrl}
@@ -49,8 +68,8 @@ export const Logo: React.FC<LogoProps> = ({
           />
         ) : (
           <svg
-            width={px}
-            height={px}
+            width={calculatedPx}
+            height={calculatedPx}
             viewBox="0 0 160 160"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -149,20 +168,43 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
 
       {showText && (
-        <div className={`flex items-baseline gap-1.5 ${textClassName}`}>
-          {storeName ? (
-            <span className="font-black tracking-tight text-[#064e3b] text-xl sm:text-2xl lg:text-3xl uppercase font-sans">
-              {storeName}
-            </span>
-          ) : (
-            <>
-              <span className="font-extrabold tracking-tight text-[#064e3b] text-xl sm:text-2xl lg:text-3xl uppercase font-sans">
-                {textPrefix}
+        <div className={`flex flex-col ${layout === 'vertical' ? alignContainerClass : ''}`}>
+          <div className={`flex items-baseline gap-1.5 ${layout === 'vertical' && align === 'center' ? 'justify-center' : ''} ${textClassName}`}>
+            {storeName ? (
+              <span
+                className={`font-black tracking-tight uppercase font-sans ${
+                  textColorMode === 'dark' ? 'text-white' : 'text-[#064e3b]'
+                } ${calculatedPx <= 44 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl lg:text-3xl'}`}
+              >
+                {storeName}
               </span>
-              <span className="font-black tracking-tight text-[#0f5145] text-xl sm:text-2xl lg:text-3xl uppercase font-sans">
-                {textSuffix}
-              </span>
-            </>
+            ) : (
+              <>
+                <span
+                  className={`font-extrabold tracking-tight uppercase font-sans ${
+                    textColorMode === 'dark' ? 'text-white' : 'text-[#064e3b]'
+                  } ${calculatedPx <= 44 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl lg:text-3xl'}`}
+                >
+                  {textPrefix}
+                </span>
+                <span
+                  className={`font-black tracking-tight uppercase font-sans ${
+                    textColorMode === 'dark' ? 'text-emerald-400' : 'text-[#0f5145]'
+                  } ${calculatedPx <= 44 ? 'text-lg sm:text-xl' : 'text-xl sm:text-2xl lg:text-3xl'}`}
+                >
+                  {textSuffix}
+                </span>
+              </>
+            )}
+          </div>
+          {tagline && (
+            <p
+              className={`text-[11px] font-medium leading-tight mt-0.5 max-w-sm ${
+                textColorMode === 'dark' ? 'text-slate-400' : 'text-slate-600'
+              }`}
+            >
+              {tagline}
+            </p>
           )}
         </div>
       )}

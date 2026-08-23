@@ -121,6 +121,16 @@ export interface StoreSettings {
   pageBackgroundPattern?: 'default' | 'grid' | 'dots' | 'ambient' | 'custom_image';
   pageBackgroundImageUrl?: string;
 
+  // TAMPILAN FOOTER / BAGIAN BAWAH HALAMAN
+  footerLogoSize?: 'sm' | 'md' | 'lg' | 'xl';
+  footerCustomLogoPx?: number; // Nilai kustom piksel (misal: 36 - 120 px)
+  footerLayoutAlign?: 'left' | 'center' | 'right'; // Rata kiri, tengah, kanan
+  footerTextLayout?: 'horizontal' | 'stacked'; // Berdampingan atau bertumpuk vertikal
+  footerShowLogoText?: boolean; // Tampilkan teks nama brand pada logo footer
+  footerShowTagline?: boolean; // Tampilkan tagline di bawah logo footer
+  footerAboutText?: string; // Teks deskripsi tentang toko di footer
+  footerCopyrightText?: string; // Teks kustom hak cipta footer
+
   appwriteConfig: {
     endpoint: string;
     projectId: string;

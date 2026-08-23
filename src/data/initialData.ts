@@ -1086,6 +1086,17 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   pageBackgroundPattern: 'default',
   pageBackgroundImageUrl: '',
 
+  // Default Pengaturan Footer / Bawah Halaman Beranda
+  footerLogoSize: 'md',
+  footerCustomLogoPx: 56,
+  footerLayoutAlign: 'left',
+  footerTextLayout: 'horizontal',
+  footerShowLogoText: true,
+  footerShowTagline: true,
+  footerTaglineText: 'Pusat distributor dan ritel peralatan listrik, perkakas teknik, dan perlengkapan rumah tangga berkualitas terstandar SNI di Jakarta & Pengiriman Seluruh Indonesia.',
+  footerAboutText: '',
+  footerCopyrightText: '',
+
   appwriteConfig: {
     endpoint: 'https://cloud.appwrite.io/v1',
     projectId: 'solusi-rumahku-app',

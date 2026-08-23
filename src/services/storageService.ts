@@ -294,11 +294,26 @@ class StorageService {
 
   // --- Settings ---
   getSettings(): StoreSettings {
-    return this.get<StoreSettings>(STORAGE_KEYS.SETTINGS, INITIAL_STORE_SETTINGS);
+    const raw = this.get<Partial<StoreSettings>>(STORAGE_KEYS.SETTINGS, INITIAL_STORE_SETTINGS);
+    const merged: StoreSettings = {
+      ...INITIAL_STORE_SETTINGS,
+      ...raw,
+    };
+    if (typeof merged.lowStockThreshold !== 'number' || isNaN(merged.lowStockThreshold) || merged.lowStockThreshold <= 0) {
+      merged.lowStockThreshold = 20;
+    }
+    return merged;
   }
 
   saveSettings(settings: StoreSettings): void {
-    this.set(STORAGE_KEYS.SETTINGS, settings);
+    const cleaned = {
+      ...settings,
+      lowStockThreshold:
+        typeof settings.lowStockThreshold === 'number' && !isNaN(settings.lowStockThreshold) && settings.lowStockThreshold > 0
+          ? settings.lowStockThreshold
+          : 20,
+    };
+    this.set(STORAGE_KEYS.SETTINGS, cleaned);
   }
 
   // --- Admin Authentication ---
@@ -543,27 +558,48 @@ class StorageService {
   }
 
   // --- Automatic Stock Alert System ---
-  getStockNotifications(): {
+  getStockNotifications(
+    customProducts?: Product[],
+    customThreshold?: number
+  ): {
     lowStockProducts: Product[];
     unspecifiedStockProducts: Product[];
     totalAlerts: number;
+    thresholdUsed: number;
   } {
-    const products = this.getProducts();
+    const products =
+      customProducts && Array.isArray(customProducts) && customProducts.length > 0
+        ? customProducts
+        : this.getProducts();
     const settings = this.getSettings();
-    const threshold = settings.lowStockThreshold || 20;
+    const threshold =
+      typeof customThreshold === 'number' && !isNaN(customThreshold) && customThreshold > 0
+        ? customThreshold
+        : (typeof settings.lowStockThreshold === 'number' && settings.lowStockThreshold > 0
+            ? settings.lowStockThreshold
+            : 20);
 
-    const lowStockProducts = products.filter(
-      (p) => typeof p.stockCount === 'number' && p.stockCount > 0 && p.stockCount <= threshold
-    );
+    const lowStockProducts = products.filter((p) => {
+      if (p.stockCount === null || p.stockCount === undefined || (p.stockCount as unknown) === '') {
+        return false;
+      }
+      const num = typeof p.stockCount === 'number' ? p.stockCount : Number(p.stockCount);
+      return !isNaN(num) && num > 0 && num <= threshold;
+    });
 
-    const unspecifiedStockProducts = products.filter(
-      (p) => p.stockCount === null || p.stockCount === undefined || (typeof p.stockCount === 'number' && p.stockCount <= 0)
-    );
+    const unspecifiedStockProducts = products.filter((p) => {
+      if (p.stockCount === null || p.stockCount === undefined || (p.stockCount as unknown) === '') {
+        return true;
+      }
+      const num = typeof p.stockCount === 'number' ? p.stockCount : Number(p.stockCount);
+      return isNaN(num) || num <= 0;
+    });
 
     return {
       lowStockProducts,
       unspecifiedStockProducts,
       totalAlerts: lowStockProducts.length + unspecifiedStockProducts.length,
+      thresholdUsed: threshold,
     };
   }
 
