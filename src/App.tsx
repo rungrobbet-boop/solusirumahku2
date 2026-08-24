@@ -119,13 +119,14 @@ export default function App() {
     refreshAppData();
   }, []);
 
-  // Real-time synchronization with Appwrite Database + Initial Auto-Fetch
+  // Real-time synchronization with Appwrite Database + Initial Auto-Fetch (Products & Store Settings)
   useEffect(() => {
-    let unsubRealtime: (() => void) | null = null;
+    let unsubProducts: (() => void) | null = null;
+    let unsubSettings: (() => void) | null = null;
     let isMounted = true;
 
     if (appwriteService.isConfigured(settings.appwriteConfig)) {
-      // 1. Initial Fetch to test and guarantee fresh products across all devices/browsers
+      // 1. Initial Fetch Products to guarantee fresh products across all devices/browsers
       appwriteService
         .fetchAllProducts(settings.appwriteConfig)
         .then((res) => {
@@ -135,9 +136,9 @@ export default function App() {
             setProducts(res.products);
           }
 
-          // 2. Realtime listener for live additions/updates/deletions only after verified fetch
+          // 2. Realtime listener for live product additions/updates/deletions
           if (res.success && isMounted) {
-            unsubRealtime = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
+            unsubProducts = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
               if (!isMounted) return;
               if (type === 'create' || type === 'update') {
                 storage.saveProduct(item as Product);
@@ -151,12 +152,38 @@ export default function App() {
         .catch((err) => {
           console.warn('Gagal memuat produk awal dari Appwrite:', err);
         });
+
+      // 3. Initial Fetch Store Settings (Logo, WhatsApp, Nama Toko, Banner, Kontak)
+      appwriteService
+        .fetchStoreSettings(settings.appwriteConfig)
+        .then((res) => {
+          if (!isMounted) return;
+          if (res.success && res.settings) {
+            storage.saveSettings(res.settings);
+            setSettings(res.settings);
+          }
+
+          // 4. Realtime listener for live settings updates
+          if (res.success && isMounted) {
+            unsubSettings = appwriteService.subscribeToStoreSettings(settings.appwriteConfig, (newSettings) => {
+              if (!isMounted) return;
+              storage.saveSettings(newSettings);
+              setSettings(newSettings);
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Gagal memuat pengaturan toko dari Appwrite:', err);
+        });
     }
 
     return () => {
       isMounted = false;
-      if (unsubRealtime) {
-        unsubRealtime();
+      if (unsubProducts) {
+        unsubProducts();
+      }
+      if (unsubSettings) {
+        unsubSettings();
       }
     };
   }, [settings.appwriteConfig]);

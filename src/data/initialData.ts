@@ -1113,12 +1113,12 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   footerCopyrightText: '',
 
   appwriteConfig: {
-    endpoint: 'https://cloud.appwrite.io/v1',
-    projectId: '',
-    databaseId: '',
-    productsCollectionId: '',
-    infoCollectionId: '',
+    endpoint: 'https://sgp.cloud.appwrite.io/v1',
+    projectId: '6a8a5a25001554f6be87',
+    databaseId: '6a8be723003761e20f8d',
+    productsCollectionId: 'products',
+    infoCollectionId: 'settings',
     bucketId: '',
-    isEnabled: false,
+    isEnabled: true,
   },
 };

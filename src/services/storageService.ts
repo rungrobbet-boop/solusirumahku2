@@ -295,12 +295,37 @@ class StorageService {
   // --- Settings ---
   getSettings(): StoreSettings {
     const raw = this.get<Partial<StoreSettings>>(STORAGE_KEYS.SETTINGS, INITIAL_STORE_SETTINGS);
+    const rawAppwrite = raw.appwriteConfig || {} as Partial<StoreSettings['appwriteConfig']>;
+
     const merged: StoreSettings = {
       ...INITIAL_STORE_SETTINGS,
       ...raw,
       appwriteConfig: {
-        ...INITIAL_STORE_SETTINGS.appwriteConfig,
-        ...(raw.appwriteConfig || {}),
+        endpoint: rawAppwrite.endpoint?.trim() || INITIAL_STORE_SETTINGS.appwriteConfig.endpoint,
+        projectId:
+          rawAppwrite.projectId &&
+          rawAppwrite.projectId.trim() &&
+          rawAppwrite.projectId !== 'solusi-rumahku-app' &&
+          rawAppwrite.projectId !== 'your-project-id'
+            ? rawAppwrite.projectId.trim()
+            : INITIAL_STORE_SETTINGS.appwriteConfig.projectId,
+        databaseId:
+          rawAppwrite.databaseId && rawAppwrite.databaseId.trim()
+            ? rawAppwrite.databaseId.trim()
+            : INITIAL_STORE_SETTINGS.appwriteConfig.databaseId,
+        productsCollectionId:
+          rawAppwrite.productsCollectionId && rawAppwrite.productsCollectionId.trim()
+            ? rawAppwrite.productsCollectionId.trim()
+            : INITIAL_STORE_SETTINGS.appwriteConfig.productsCollectionId,
+        infoCollectionId:
+          rawAppwrite.infoCollectionId && rawAppwrite.infoCollectionId.trim()
+            ? rawAppwrite.infoCollectionId.trim()
+            : INITIAL_STORE_SETTINGS.appwriteConfig.infoCollectionId,
+        bucketId: rawAppwrite.bucketId || '',
+        isEnabled:
+          rawAppwrite.isEnabled !== undefined
+            ? Boolean(rawAppwrite.isEnabled)
+            : INITIAL_STORE_SETTINGS.appwriteConfig.isEnabled,
       },
     };
 

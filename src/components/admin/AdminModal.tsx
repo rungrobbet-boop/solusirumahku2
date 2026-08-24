@@ -231,6 +231,25 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [appwritePushing, setAppwritePushing] = useState(false);
   const [appwritePushProgress, setAppwritePushProgress] = useState<string>('');
   const [appwritePulling, setAppwritePulling] = useState(false);
+  const [appwriteSettingsPushing, setAppwriteSettingsPushing] = useState(false);
+  const [appwriteSettingsProgress, setAppwriteSettingsProgress] = useState<string>('');
+  const [appwriteSettingsPulling, setAppwriteSettingsPulling] = useState(false);
+
+  // Helper to save settings locally and push to Appwrite cloud
+  const handleSaveAndSyncSettings = async (customSettings?: StoreSettings, successMsg?: string) => {
+    const toSave = customSettings || settings;
+    storage.saveSettings(toSave);
+    setSettings(toSave);
+    onDataUpdated();
+    if (appwriteService.isConfigured(toSave.appwriteConfig)) {
+      try {
+        await appwriteService.saveStoreSettings(toSave.appwriteConfig, toSave);
+      } catch (err) {
+        console.warn('Gagal sinkron setting ke Appwrite:', err);
+      }
+    }
+    showSuccessFeedback(successMsg || 'Pengaturan berhasil disimpan dan disinkronkan!');
+  };
 
   // Feedback banner
   const [actionSuccessMessage, setActionSuccessMessage] = useState('');
@@ -1157,8 +1176,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <button
                       type="button"
                       onClick={() => {
-                        storage.saveSettings(settings);
-                        showSuccessFeedback('Pengaturan Halaman Utama berhasil disimpan dan diterapkan!');
+                        handleSaveAndSyncSettings(settings, 'Pengaturan Halaman Utama (Logo, Nama Toko, Banner, Kontak) berhasil disimpan dan disinkronkan ke Cloud!');
                       }}
                       className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-2 shrink-0 active:scale-98 transition-all"
                     >
@@ -1869,10 +1887,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             footerCustomLogoPx: 64,
                             footerLayoutAlign: 'left' as const,
                           };
-                          setSettings(updated);
-                          storage.saveSettings(updated);
-                          onDataUpdated();
-                          showSuccessFeedback('Ukuran logo footer dikembalikan ke standar (64px).');
+                          handleSaveAndSyncSettings(updated, 'Ukuran logo footer dikembalikan ke standar (64px) & disinkronkan!');
                         }}
                         className="text-xs text-slate-400 hover:text-slate-200 underline"
                       >
@@ -1882,8 +1897,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       <button
                         type="button"
                         onClick={() => {
-                          storage.saveSettings(settings);
-                          showSuccessFeedback('Pengaturan Ukuran Logo Footer & Hak Cipta berhasil disimpan!');
+                          handleSaveAndSyncSettings(settings, 'Pengaturan Ukuran Logo Footer & Hak Cipta berhasil disimpan dan disinkronkan ke Cloud!');
                         }}
                         className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 active:scale-98 transition-all"
                       >
