@@ -32,6 +32,7 @@ import {
   CartItem,
 } from './types';
 import { storage } from './services/storageService';
+import { appwriteService } from './services/appwriteService';
 import { Logo } from './components/Logo';
 import { InteractiveCategorySlider } from './components/InteractiveCategorySlider';
 import { ProductCard } from './components/ProductCard';
@@ -117,6 +118,23 @@ export default function App() {
   useEffect(() => {
     refreshAppData();
   }, []);
+
+  // Real-time synchronization with Appwrite Database
+  useEffect(() => {
+    if (appwriteService.isConfigured(settings.appwriteConfig)) {
+      const unsub = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
+        if (type === 'create' || type === 'update') {
+          storage.saveProduct(item as Product);
+        } else if (type === 'delete') {
+          storage.deleteProduct((item as { id: string }).id);
+        }
+        setProducts(storage.getProducts());
+      });
+      return () => {
+        unsub();
+      };
+    }
+  }, [settings.appwriteConfig]);
 
   // Update cart in storage
   const handleUpdateCart = (newCart: CartItem[]) => {

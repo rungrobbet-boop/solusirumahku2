@@ -128,6 +128,7 @@ export interface StoreSettings {
   footerTextLayout?: 'horizontal' | 'stacked'; // Berdampingan atau bertumpuk vertikal
   footerShowLogoText?: boolean; // Tampilkan teks nama brand pada logo footer
   footerShowTagline?: boolean; // Tampilkan tagline di bawah logo footer
+  footerTaglineText?: string; // Teks kustom tagline pada footer
   footerAboutText?: string; // Teks deskripsi tentang toko di footer
   footerCopyrightText?: string; // Teks kustom hak cipta footer
 

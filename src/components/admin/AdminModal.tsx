@@ -49,6 +49,7 @@ import {
   AlignRight,
   Type,
   Layout,
+  RefreshCw,
 } from 'lucide-react';
 import {
   Product,
@@ -221,9 +222,12 @@ export const AdminModal: React.FC<AdminModalProps> = ({
   const [passwordChangeSuccess, setPasswordChangeSuccess] = useState('');
   const [passwordChangeError, setPasswordChangeError] = useState('');
 
-  // Appwrite test state
+  // Appwrite test & sync state
   const [appwriteTestResult, setAppwriteTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [appwriteTesting, setAppwriteTesting] = useState(false);
+  const [appwritePushing, setAppwritePushing] = useState(false);
+  const [appwritePushProgress, setAppwritePushProgress] = useState<string>('');
+  const [appwritePulling, setAppwritePulling] = useState(false);
 
   // Feedback banner
   const [actionSuccessMessage, setActionSuccessMessage] = useState('');
@@ -548,8 +552,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 <div className="flex flex-col gap-3">
                   <button
                     onClick={() => {
+                      clearAuthInputs();
                       setAuthMode('login');
-                      setLoginError('');
                     }}
                     className="w-full py-3.5 px-6 rounded-2xl bg-[#065f46] hover:bg-[#047857] text-white text-sm font-bold shadow-md transition-all active:scale-98 flex items-center justify-center gap-2"
                     id="btn-admin-choose-login"
@@ -560,9 +564,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                   <button
                     onClick={() => {
+                      clearAuthInputs();
                       setAuthMode('register');
-                      setRegError('');
-                      setIsAccessCodeVerified(false);
                     }}
                     className="w-full py-3.5 px-6 rounded-2xl bg-slate-700 hover:bg-slate-600 text-slate-100 text-sm font-bold border border-slate-600 transition-all active:scale-98 flex flex-col items-center justify-center py-3"
                     id="btn-admin-choose-register"
@@ -582,6 +585,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             {authMode === 'login' && (
               <form
                 onSubmit={handleLogin}
+                autoComplete="off"
                 className="bg-slate-800/90 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-xl"
               >
                 <div className="flex items-center justify-between mb-6">
@@ -591,7 +595,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   </h3>
                   <button
                     type="button"
-                    onClick={() => setAuthMode('choose')}
+                    onClick={() => {
+                      clearAuthInputs();
+                      setAuthMode('choose');
+                    }}
                     className="text-xs text-emerald-400 hover:underline"
                   >
                     Kembali
@@ -612,6 +619,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <input
                       type="text"
                       required
+                      autoComplete="off"
                       value={loginUsername}
                       onChange={(e) => setLoginUsername(e.target.value)}
                       placeholder="Username admin"
@@ -626,6 +634,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <input
                       type="password"
                       required
+                      autoComplete="new-password"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       placeholder="Password kombinasi huruf & angka"
@@ -647,6 +656,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               /* Step 1 Register: Validate Manager Code "dear2226" */
               <form
                 onSubmit={handleVerifyAccessCode}
+                autoComplete="off"
                 className="bg-slate-800/90 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-xl"
               >
                 <div className="flex items-center justify-between mb-4">
@@ -656,7 +666,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   </h3>
                   <button
                     type="button"
-                    onClick={() => setAuthMode('choose')}
+                    onClick={() => {
+                      clearAuthInputs();
+                      setAuthMode('choose');
+                    }}
                     className="text-xs text-emerald-400 hover:underline"
                   >
                     Kembali
@@ -681,6 +694,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   <input
                     type="text"
                     required
+                    autoComplete="off"
                     value={regAccessCode}
                     onChange={(e) => setRegAccessCode(e.target.value)}
                     placeholder="Masukkan kode akses (cth: dear2226)"
@@ -701,6 +715,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
               /* Step 2 Register: Full form with Password Rules */
               <form
                 onSubmit={handleRegister}
+                autoComplete="off"
                 className="bg-slate-800/90 rounded-3xl p-6 sm:p-8 border border-slate-700 shadow-xl"
               >
                 <div className="flex items-center justify-between mb-4">
@@ -710,7 +725,10 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                   </h3>
                   <button
                     type="button"
-                    onClick={() => setIsAccessCodeVerified(false)}
+                    onClick={() => {
+                      setRegError('');
+                      setIsAccessCodeVerified(false);
+                    }}
                     className="text-xs text-slate-400 hover:underline"
                   >
                     Kembali
@@ -735,6 +753,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <input
                       type="text"
                       required
+                      autoComplete="off"
                       value={regFullName}
                       onChange={(e) => setRegFullName(e.target.value)}
                       placeholder="Contoh: Budi Santoso"
@@ -749,6 +768,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <input
                       type="text"
                       required
+                      autoComplete="off"
                       value={regUsername}
                       onChange={(e) => setRegUsername(e.target.value)}
                       placeholder="Contoh: manager22"
@@ -763,6 +783,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     <input
                       type="password"
                       required
+                      autoComplete="new-password"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       placeholder="Contoh: Manager2026"
@@ -1595,18 +1616,289 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         />
                       </div>
                     </div>
+                  </div>
+
+                  {/* 6. Pengaturan Tampilan Bagian Bawah Halaman Beranda (Footer, Logo & Tata Letak) */}
+                  <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                        <Layout className="w-4 h-4" />
+                        6. Tampilan Bagian Bawah Halaman Beranda (Footer, Logo & Tata Letak)
+                      </h3>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
+                        Sinkron Logo Atas & Bawah
+                      </span>
+                    </div>
+
+                    {/* Footer Logo & Text Live Preview */}
+                    <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-700">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
+                          <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                          Pratinjau Langsung Bagian Bawah (Footer Live Preview):
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-mono">
+                          Ukuran: {settings.footerCustomLogoPx ? `${settings.footerCustomLogoPx}px` : (settings.footerLogoSize || 'md').toUpperCase()} &bull; Rata: {settings.footerLayoutAlign || 'left'}
+                        </span>
+                      </div>
+
+                      <div className="p-5 rounded-2xl bg-slate-900 border border-slate-800 text-slate-200">
+                        <div
+                          className={`flex flex-col ${
+                            settings.footerLayoutAlign === 'center'
+                              ? 'items-center text-center'
+                              : settings.footerLayoutAlign === 'right'
+                              ? 'items-end text-right'
+                              : 'items-start text-left'
+                          }`}
+                        >
+                          <div className="bg-white/95 p-3 rounded-2xl shadow-sm inline-block">
+                            <Logo
+                              size={settings.footerLogoSize || 'md'}
+                              customPixelSize={settings.footerCustomLogoPx}
+                              customLogoUrl={settings.customLogoUrl}
+                              textPrefix={settings.logoTextPrefix || 'SOLUSI'}
+                              textSuffix={settings.logoTextSuffix || 'RUMAHKU'}
+                              storeName={settings.storeName}
+                              showText={settings.footerShowLogoText !== false}
+                              showTagline={settings.footerShowTagline !== false}
+                              customTagline={settings.footerTaglineText || settings.tagline}
+                              layout={settings.footerTextLayout || 'stacked'}
+                              align={settings.footerLayoutAlign || 'left'}
+                            />
+                          </div>
+
+                          <p className="mt-3 text-xs text-slate-400 max-w-lg leading-relaxed">
+                            {settings.footerAboutText ||
+                              'Distributor & supplier terpercaya penyedia alat listrik rumah tangga, lampu LED, perkakas teknik mekanik, dan kabel instalasi berstandar SNI.'}
+                          </p>
+
+                          <div className="mt-4 pt-3 border-t border-slate-800 w-full text-[11px] text-slate-500">
+                            {settings.footerCopyrightText
+                              ? settings.footerCopyrightText.replace('{year}', new Date().getFullYear().toString()).replace('{store}', settings.storeName)
+                              : `© ${new Date().getFullYear()} ${settings.storeName}. Hak Cipta Dilindungi.`}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Logo Size Presets */}
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Ukuran Logo Bagian Bawah (Footer Logo Size)
+                        </label>
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {(['sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                            <button
+                              key={sz}
+                              type="button"
+                              onClick={() => setSettings({ ...settings, footerLogoSize: sz, footerCustomLogoPx: undefined })}
+                              className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                                (settings.footerLogoSize || 'md') === sz && !settings.footerCustomLogoPx
+                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                  : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
+                              }`}
+                            >
+                              {sz === 'sm' && 'Kecil (40px)'}
+                              {sz === 'md' && 'Sedang (56px)'}
+                              {sz === 'lg' && 'Besar (72px)'}
+                              {sz === 'xl' && 'Ekstra (96px)'}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Custom Pixel Slider */}
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <label className="font-semibold text-slate-300 block">
+                            Atau Kustom Ukuran Logo (Slider Pixel)
+                          </label>
+                          <span className="text-emerald-400 font-mono font-bold text-xs">
+                            {settings.footerCustomLogoPx || (settings.footerLogoSize === 'sm' ? 40 : settings.footerLogoSize === 'lg' ? 72 : settings.footerLogoSize === 'xl' ? 96 : 56)} px
+                          </span>
+                        </div>
+                        <input
+                          type="range"
+                          min="32"
+                          max="140"
+                          step="4"
+                          value={
+                            settings.footerCustomLogoPx ||
+                            (settings.footerLogoSize === 'sm' ? 40 : settings.footerLogoSize === 'lg' ? 72 : settings.footerLogoSize === 'xl' ? 96 : 56)
+                          }
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              footerCustomLogoPx: Number(e.target.value),
+                            })
+                          }
+                          className="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                        />
+                        <div className="flex justify-between text-[10px] text-slate-500 mt-1">
+                          <span>32px</span>
+                          <span>Default (56px)</span>
+                          <span>140px</span>
+                        </div>
+                      </div>
+
+                      {/* Alignment */}
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Tata Letak Rata Posisi Footer
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, footerLayoutAlign: 'left' })}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                              (settings.footerLayoutAlign || 'left') === 'left'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            <AlignLeft className="w-3.5 h-3.5" />
+                            Rata Kiri
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, footerLayoutAlign: 'center' })}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                              settings.footerLayoutAlign === 'center'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            <AlignCenter className="w-3.5 h-3.5" />
+                            Rata Tengah
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, footerLayoutAlign: 'right' })}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                              settings.footerLayoutAlign === 'right'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            <AlignRight className="w-3.5 h-3.5" />
+                            Rata Kanan
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Text Layout Direction */}
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Orientasi Teks Brand pada Logo
+                        </label>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, footerTextLayout: 'stacked' })}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                              (settings.footerTextLayout || 'stacked') === 'stacked'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            Bertumpuk (Vertikal)
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setSettings({ ...settings, footerTextLayout: 'horizontal' })}
+                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                              settings.footerTextLayout === 'horizontal'
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
+                            }`}
+                          >
+                            Berdampingan (Horizontal)
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Toggles */}
+                      <div className="sm:col-span-2 flex flex-wrap items-center gap-4 pt-2">
+                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200">
+                          <input
+                            type="checkbox"
+                            checked={settings.footerShowLogoText !== false}
+                            onChange={(e) => setSettings({ ...settings, footerShowLogoText: e.target.checked })}
+                            className="rounded text-emerald-500 focus:ring-emerald-400 bg-slate-900 border-slate-700"
+                          />
+                          Tampilkan Teks Nama Toko di Logo Footer
+                        </label>
+
+                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200">
+                          <input
+                            type="checkbox"
+                            checked={settings.footerShowTagline !== false}
+                            onChange={(e) => setSettings({ ...settings, footerShowTagline: e.target.checked })}
+                            className="rounded text-emerald-500 focus:ring-emerald-400 bg-slate-900 border-slate-700"
+                          />
+                          Tampilkan Tagline / Slogan di Logo Footer
+                        </label>
+                      </div>
+
+                      {/* Custom Tagline Footer */}
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Tagline / Slogan Khusus Footer (Opsional)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.footerTaglineText || ''}
+                          onChange={(e) => setSettings({ ...settings, footerTaglineText: e.target.value })}
+                          placeholder={settings.tagline || 'Pusat Alat Listrik, Teknik & Rumah Tangga SNI'}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                        />
+                      </div>
+
+                      {/* Custom Copyright */}
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Hak Cipta (Copyright Footer)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.footerCopyrightText || ''}
+                          onChange={(e) => setSettings({ ...settings, footerCopyrightText: e.target.value })}
+                          placeholder="© {year} {store}. Hak Cipta Dilindungi."
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-0.5 block">
+                          Gunakan <code>{'{year}'}</code> untuk tahun berjalan dan <code>{'{store}'}</code> untuk nama toko.
+                        </span>
+                      </div>
+
+                      {/* Custom About Text */}
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Teks Deskripsi &ldquo;Tentang Toko&rdquo; di Footer
+                        </label>
+                        <textarea
+                          rows={2}
+                          value={settings.footerAboutText || ''}
+                          onChange={(e) => setSettings({ ...settings, footerAboutText: e.target.value })}
+                          placeholder="Distributor & supplier terpercaya penyedia alat listrik rumah tangga, lampu LED, perkakas teknik mekanik, dan kabel instalasi berstandar SNI."
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                        />
+                      </div>
+                    </div>
 
                     <div className="pt-4 border-t border-slate-700 flex justify-end">
                       <button
                         type="button"
                         onClick={() => {
                           storage.saveSettings(settings);
-                          showSuccessFeedback('Pengaturan Halaman Utama berhasil disimpan!');
+                          showSuccessFeedback('Pengaturan Halaman Utama & Tampilan Footer berhasil disimpan!');
                         }}
                         className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-2 active:scale-98 transition-all"
                       >
                         <Save className="w-4 h-4" />
-                        Simpan Semua Pengaturan Halaman Utama
+                        Simpan Semua Pengaturan Halaman Utama & Footer
                       </button>
                     </div>
                   </div>
@@ -2161,6 +2453,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             if (!editingProduct.name) return;
                             const updated = storage.saveProduct(editingProduct);
                             setProducts(updated);
+                            if (appwriteService.isConfigured(settings.appwriteConfig)) {
+                              appwriteService.saveProduct(settings.appwriteConfig, editingProduct).catch(() => {});
+                            }
                             setEditingProduct(null);
                             setIsCreatingProduct(false);
                             showSuccessFeedback('Produk berhasil disimpan!');
@@ -2284,6 +2579,9 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                                             if (confirm(`Hapus produk "${p.name}"?`)) {
                                               const updated = storage.deleteProduct(p.id);
                                               setProducts(updated);
+                                              if (appwriteService.isConfigured(settings.appwriteConfig)) {
+                                                appwriteService.deleteProduct(settings.appwriteConfig, p.id).catch(() => {});
+                                              }
                                               showSuccessFeedback('Produk dihapus.');
                                             }
                                           }}
@@ -2433,8 +2731,11 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                             storage.saveProducts(updatedList);
                             setProducts(updatedList);
+                            if (appwriteService.isConfigured(settings.appwriteConfig)) {
+                              appwriteService.pushAllProductsToAppwrite(settings.appwriteConfig, updatedList).catch(() => {});
+                            }
                             setIsImportModalOpen(false);
-                            showSuccessFeedback(`Berhasil mengimpor ${parsed.length} data produk!`);
+                            showSuccessFeedback(`Berhasil mengimpor ${parsed.length} data produk dan disinkronkan!`);
                           } catch (err: any) {
                             setImportError(`Gagal membaca CSV: ${err.message || 'Format tidak valid'}`);
                           }
@@ -4043,17 +4344,45 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 </div>
               )}
 
-              {/* 9. APPWRITE BACKEND CONFIGURATION */}
+              {/* 9. APPWRITE BACKEND CONFIGURATION & REALTIME SYNC */}
               {activeTab === 'appwrite' && (
                 <div className="space-y-6 text-xs">
-                  <div>
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Database className="w-5 h-5 text-rose-400" />
-                      Konfigurasi Backend Appwrite
-                    </h2>
-                    <p className="text-slate-400 mt-1">
-                      Hubungkan database Appwrite untuk sinkronisasi cloud atau gunakan durabilitas penyimpanan lokal secara otomatis.
-                    </p>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div>
+                      <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                        <Database className="w-5 h-5 text-rose-400" />
+                        Sinkronisasi Database & Realtime Appwrite
+                      </h2>
+                      <p className="text-slate-400 mt-1">
+                        Hubungkan database Appwrite untuk sinkronisasi cloud realtime dua arah langsung melalui aplikasi.
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-2.5 w-2.5 relative">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                      </span>
+                      <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/30 px-2.5 py-1 rounded-full">
+                        Realtime Listener Siap
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status & Jawaban Realtime Card */}
+                  <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-500/30 text-emerald-200 text-xs space-y-2">
+                    <div className="font-bold text-white flex items-center gap-1.5 text-sm">
+                      <Sparkles className="w-4 h-4 text-emerald-400" />
+                      Status Sinkronisasi & Realtime Database:
+                    </div>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300">
+                      <li>
+                        <strong className="text-white">Realtime Aktif:</strong> Setiap kali Anda mengupdate collection di Appwrite atau sebaliknya, perubahan pada aplikasi saat ini <strong>langsung realtime terupdate</strong> tanpa perlu me-refresh halaman.
+                      </li>
+                      <li>
+                        <strong className="text-white">Impor & Ekspor Langsung di Aplikasi:</strong> Anda <strong>tidak perlu membuka konsol Appwrite manual</strong>. Anda bisa langsung melakukan Impor CSV, Tambah Produk, Edit Stok & Harga, atau Hapus Produk langsung dari panel Admin ini — semua perubahan akan otomatis di-sync ke database Appwrite!
+                      </li>
+                    </ul>
                   </div>
 
                   {appwriteTestResult && (
@@ -4068,7 +4397,32 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     </div>
                   )}
 
+                  {/* Appwrite Settings Box */}
                   <div className="p-5 rounded-2xl bg-slate-800 border border-slate-700 space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                        Kredensial Koneksi Appwrite
+                      </h3>
+
+                      <label className="flex items-center gap-2 cursor-pointer bg-slate-900 px-3 py-1.5 rounded-xl border border-slate-700">
+                        <input
+                          type="checkbox"
+                          checked={settings.appwriteConfig?.isEnabled === true}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              appwriteConfig: { ...settings.appwriteConfig, isEnabled: e.target.checked },
+                            })
+                          }
+                          className="rounded text-emerald-500 focus:ring-emerald-400 bg-slate-800 border-slate-600"
+                        />
+                        <span className="text-xs font-bold text-slate-200">
+                          {settings.appwriteConfig?.isEnabled ? '🟢 Realtime Cloud Aktif' : '⚪ Mode Offline / Standalone'}
+                        </span>
+                      </label>
+                    </div>
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="font-semibold text-slate-300 block mb-1">Appwrite Endpoint</label>
@@ -4098,7 +4452,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             })
                           }
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
-                          placeholder="solusi-rumahku-app"
+                          placeholder="Masukkan Project ID Appwrite Anda"
                         />
                       </div>
 
@@ -4114,6 +4468,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             })
                           }
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                          placeholder="default"
                         />
                       </div>
 
@@ -4129,6 +4484,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             })
                           }
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                          placeholder="products"
                         />
                       </div>
                     </div>
@@ -4160,6 +4516,81 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
                       >
                         Simpan Konfigurasi
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Push & Pull Actions */}
+                  <div className="p-5 rounded-2xl bg-slate-800 border border-slate-700 space-y-4">
+                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                      <RefreshCw className="w-4 h-4 text-sky-400" />
+                      Sinkronisasi Massal (Bulk Push & Pull Sync)
+                    </h3>
+                    <p className="text-slate-400 text-xs">
+                      Gunakan tombol di bawah ini untuk mengunggah semua produk lokal ke database Appwrite atau menarik data terbaru dari Appwrite ke dalam aplikasi.
+                    </p>
+
+                    {appwritePushProgress && (
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-700 font-mono text-xs text-amber-300">
+                        {appwritePushProgress}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        disabled={appwritePushing}
+                        onClick={async () => {
+                          if (!confirm(`Unggah ${products.length} produk lokal saat ini ke database Appwrite?`)) return;
+                          setAppwritePushing(true);
+                          setAppwritePushProgress('Memulai pengunggahan massal...');
+                          const res = await appwriteService.pushAllProductsToAppwrite(
+                            settings.appwriteConfig,
+                            products,
+                            (curr, total) => {
+                              setAppwritePushProgress(`Mengunggah produk: ${curr} dari ${total} (${Math.round((curr / total) * 100)}%)`);
+                            }
+                          );
+                          setAppwritePushing(false);
+                          if (res.success) {
+                            showSuccessFeedback(`Berhasil menyinkronkan ${res.count} produk ke Appwrite!`);
+                            setAppwritePushProgress(`Selesai! Berhasil mengunggah ${res.count} produk.`);
+                          } else {
+                            setAppwritePushProgress(`Gagal: ${res.error}`);
+                          }
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${appwritePushing ? 'animate-spin' : ''}`} />
+                        {appwritePushing ? 'Mengunggah ke Appwrite...' : `Unggah Semua (${products.length}) Produk ke Appwrite`}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={appwritePulling}
+                        onClick={async () => {
+                          setAppwritePulling(true);
+                          try {
+                            const res = await appwriteService.fetchAllProducts(settings.appwriteConfig);
+                            if (res.success && res.products && res.products.length > 0) {
+                              storage.saveProducts(res.products);
+                              setProducts(res.products);
+                              showSuccessFeedback(`Berhasil menarik ${res.products.length} produk dari Appwrite!`);
+                            } else if (res.success && res.products && res.products.length === 0) {
+                              alert('Tidak ditemukan dokumen produk pada koleksi Appwrite.');
+                            } else {
+                              alert(`Gagal mengambil data dari Appwrite: ${res.error || 'Terjadi kesalahan'}`);
+                            }
+                          } catch (err: any) {
+                            alert(`Gagal mengambil data dari Appwrite: ${err.message}`);
+                          } finally {
+                            setAppwritePulling(false);
+                          }
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <Download className="w-4 h-4" />
+                        {appwritePulling ? 'Menarik Data...' : 'Tarik Data Produk dari Appwrite ke Aplikasi'}
                       </button>
                     </div>
                   </div>

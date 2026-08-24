@@ -1099,11 +1099,11 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
 
   appwriteConfig: {
     endpoint: 'https://cloud.appwrite.io/v1',
-    projectId: 'solusi-rumahku-app',
-    databaseId: 'solusi_rumahku_db',
-    productsCollectionId: 'products',
-    infoCollectionId: 'info_trends',
-    bucketId: 'media_storage',
+    projectId: '',
+    databaseId: '',
+    productsCollectionId: '',
+    infoCollectionId: '',
+    bucketId: '',
     isEnabled: false,
   },
 };
