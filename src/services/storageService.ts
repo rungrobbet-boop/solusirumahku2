@@ -372,7 +372,7 @@ class StorageService {
     password: string
   ): { success: boolean; admin?: AdminUser; error?: string } {
     if (accessCode.trim() !== MANAGER_ACCESS_CODE) {
-      return { success: false, error: `Kode akses salah. Masukkan kode akses khusus manajer yang sah ("dear2226").` };
+      return { success: false, error: 'Kode akses salah. Masukkan kode otorisasi manajer yang valid.' };
     }
 
     if (!username || username.trim().length < 3) {

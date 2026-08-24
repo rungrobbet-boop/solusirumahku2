@@ -1060,7 +1060,9 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   email: 'solusirumahku.official@gmail.com',
   instagramUrl: 'https://instagram.com/solusirumahku',
   facebookUrl: 'https://facebook.com/solusirumahku',
+  tiktokUrl: 'https://tiktok.com/@solusirumahku',
   lowStockThreshold: 20,
+  operationalDays: 'Senin - Sabtu (Kecuali Hari Libur Nasional)',
 
   // Default Logo & Branding
   customLogoUrl: '',
@@ -1086,11 +1088,24 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
   pageBackgroundPattern: 'default',
   pageBackgroundImageUrl: '',
 
+  // Default Pengaturan Pengiriman & Ekspedisi (Tentang Kami & Layanan)
+  shippingTitle: 'Jangkauan Pengiriman Seluruh Indonesia',
+  shippingBadge: 'Pengiriman & Ekspedisi Terpercaya',
+  shippingDescription: 'Kami melayani pengiriman peralatan proyek, rol kabel, instalasi lampu, dan perkakas teknik ke seluruh wilayah Indonesia melalui ekspedisi kargo terpercaya, kurir instan, maupun ambil langsung di toko.',
+  shippingHighlights: [
+    'Pengemasan aman standar industri (Dus tebal + Bubble wrap gratis)',
+    'Dukungan Ekspedisi Kargo (JNE Trucking, Dakota, SiCepat Gokil, dll) & Reguler ke Seluruh Indonesia',
+    'Same-Day & Instant Delivery (GoSend/Grab) untuk area terjangkau',
+    'Pemberian nomor resi dan tracking langsung dikonfirmasi ke WhatsApp Anda',
+  ],
+  shippingFooterNote: 'Solusi Rumahku • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)',
+
   // Default Pengaturan Footer / Bawah Halaman Beranda
   footerLogoSize: 'md',
   footerCustomLogoPx: 56,
   footerLayoutAlign: 'left',
   footerTextLayout: 'horizontal',
+  footerTaglinePosition: 'side',
   footerShowLogoText: true,
   footerShowTagline: true,
   footerTaglineText: 'Pusat distributor dan ritel peralatan listrik, perkakas teknik, dan perlengkapan rumah tangga berkualitas terstandar SNI di Jakarta & Pengiriman Seluruh Indonesia.',

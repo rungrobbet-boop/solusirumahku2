@@ -56,7 +56,7 @@ import {
 export default function App() {
   // Navigation Tabs
   const [activeTab, setActiveTab] = useState<
-    'home' | 'categories' | 'brands' | 'infoTrend' | 'about'
+    'home' | 'categories' | 'brands' | 'infoTrend' | 'about' | 'contact'
   >('home');
 
   // Datasets from storage
@@ -487,8 +487,21 @@ export default function App() {
                   ? 'bg-[#064e3b] text-white shadow-xs'
                   : 'text-slate-700 hover:text-[#065f46] hover:bg-slate-100'
               }`}
+              id="nav-btn-about"
             >
-              Tentang Kami &amp; Hubungi
+              Tentang Kami
+            </button>
+
+            <button
+              onClick={() => setActiveTab('contact')}
+              className={`px-4 py-2 rounded-xl transition-all ${
+                activeTab === 'contact'
+                  ? 'bg-[#064e3b] text-white shadow-xs'
+                  : 'text-slate-700 hover:text-[#065f46] hover:bg-slate-100'
+              }`}
+              id="nav-btn-contact"
+            >
+              Hubungi Kami
             </button>
           </nav>
 
@@ -564,7 +577,19 @@ export default function App() {
                   activeTab === 'about' ? 'bg-[#064e3b] text-white' : 'text-slate-700 hover:bg-slate-100'
                 }`}
               >
-                Tentang Kami &amp; Hubungi
+                Tentang Kami
+              </button>
+
+              <button
+                onClick={() => {
+                  setActiveTab('contact');
+                  setIsMobileMenuOpen(false);
+                }}
+                className={`w-full text-left px-3.5 py-2 rounded-xl ${
+                  activeTab === 'contact' ? 'bg-[#064e3b] text-white' : 'text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                Hubungi Kami
               </button>
             </div>
           )}
@@ -893,12 +918,23 @@ export default function App() {
           />
         )}
 
-        {/* ================= 5. TAB: TENTANG KAMI & KONTAK ================= */}
+        {/* ================= 5. TAB: TENTANG KAMI ================= */}
         {activeTab === 'about' && (
           <AboutContactView
             settings={settings}
             galleryMedia={galleryMedia}
             onOpenWhatsApp={handleGeneralWhatsAppChat}
+            initialMode="about"
+          />
+        )}
+
+        {/* ================= 6. TAB: HUBUNGI KAMI ================= */}
+        {activeTab === 'contact' && (
+          <AboutContactView
+            settings={settings}
+            galleryMedia={galleryMedia}
+            onOpenWhatsApp={handleGeneralWhatsAppChat}
+            initialMode="contact"
           />
         )}
       </main>

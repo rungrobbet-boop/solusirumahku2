@@ -11,6 +11,7 @@ interface LogoProps {
   textSuffix?: string;
   storeName?: string;
   tagline?: string;
+  taglinePlacement?: 'bottom' | 'side';
   layout?: 'horizontal' | 'vertical';
   align?: 'left' | 'center' | 'right';
   textColorMode?: 'light' | 'dark';
@@ -27,18 +28,24 @@ export const Logo: React.FC<LogoProps> = ({
   textSuffix = 'RUMAHKU',
   storeName,
   tagline,
+  taglinePlacement = 'bottom',
   layout = 'horizontal',
   align = 'left',
   textColorMode = 'light',
 }) => {
-  const iconSizeMap = {
-    sm: 40,
-    md: 56,
-    lg: 72,
-    xl: 96,
+  const iconSizeMap: Record<string, number> = {
+    sm: 48,
+    md: 64,
+    lg: 96,
+    xl: 144,
   };
 
-  const calculatedPx = customPx && customPx > 0 ? customPx : iconSizeMap[size] || 56;
+  const parsedCustomPx =
+    customPx !== undefined && customPx !== null && !isNaN(Number(customPx)) && Number(customPx) > 0
+      ? Number(customPx)
+      : undefined;
+
+  const calculatedPx = parsedCustomPx || iconSizeMap[size] || 64;
 
   // Alignment classes
   const alignContainerClass =
@@ -56,8 +63,13 @@ export const Logo: React.FC<LogoProps> = ({
       id="brand-logo-container"
     >
       <div
-        className="relative shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xs ring-1 ring-[#065f46]/20 p-1.5 overflow-hidden transition-all"
-        style={{ width: `${calculatedPx}px`, height: `${calculatedPx}px` }}
+        className="relative shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xs ring-1 ring-[#065f46]/20 p-1.5 overflow-hidden transition-all duration-150"
+        style={{
+          width: `${calculatedPx}px`,
+          height: `${calculatedPx}px`,
+          minWidth: `${calculatedPx}px`,
+          minHeight: `${calculatedPx}px`,
+        }}
       >
         {customLogoUrl ? (
           <img
@@ -168,7 +180,13 @@ export const Logo: React.FC<LogoProps> = ({
       </div>
 
       {showText && (
-        <div className={`flex flex-col ${layout === 'vertical' ? alignContainerClass : ''}`}>
+        <div
+          className={`flex ${
+            taglinePlacement === 'side' && tagline
+              ? 'flex-col sm:flex-row sm:items-center gap-2 sm:gap-3'
+              : 'flex-col'
+          } ${layout === 'vertical' ? alignContainerClass : ''}`}
+        >
           <div className={`flex items-baseline gap-1.5 ${layout === 'vertical' && align === 'center' ? 'justify-center' : ''} ${textClassName}`}>
             {storeName ? (
               <span
@@ -198,13 +216,21 @@ export const Logo: React.FC<LogoProps> = ({
             )}
           </div>
           {tagline && (
-            <p
-              className={`text-[11px] font-medium leading-tight mt-0.5 max-w-sm ${
-                textColorMode === 'dark' ? 'text-slate-400' : 'text-slate-600'
+            <div
+              className={`flex items-center ${
+                taglinePlacement === 'side'
+                  ? 'sm:border-l sm:border-slate-700/60 sm:pl-3'
+                  : 'mt-0.5'
               }`}
             >
-              {tagline}
-            </p>
+              <p
+                className={`text-[11px] font-medium leading-tight max-w-sm ${
+                  textColorMode === 'dark' ? 'text-slate-400' : 'text-slate-600'
+                }`}
+              >
+                {tagline}
+              </p>
+            </div>
           )}
         </div>
       )}

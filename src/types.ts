@@ -35,16 +35,21 @@ export interface CategoryItem {
 export interface BrandItem {
   id: string;
   name: string;
+  slug?: string;
   logoUrl?: string;
   description?: string;
   featured?: boolean;
+  isOfficialDistributor?: boolean;
 }
 
 export interface ProductTypeItem {
   id: string;
   name: string;
   categoryId: string;
-  categoryName: string;
+  categoryName?: string;
+  iconName?: string;
+  badge?: string;
+  description?: string;
 }
 
 export interface InfoTrendItem {
@@ -95,7 +100,9 @@ export interface StoreSettings {
   email: string;
   instagramUrl?: string;
   facebookUrl?: string;
+  tiktokUrl?: string;
   lowStockThreshold: number; // default 20
+  operationalDays?: string; // Hari operasional (misal: 'Senin - Sabtu (Kecuali Libur Nasional)')
 
   // LOGO & IDENTITAS BRANDING
   customLogoUrl?: string;
@@ -121,13 +128,21 @@ export interface StoreSettings {
   pageBackgroundPattern?: 'default' | 'grid' | 'dots' | 'ambient' | 'custom_image';
   pageBackgroundImageUrl?: string;
 
+  // PENGATURAN PENGIRIMAN & EKSPEDISI (TENTANG KAMI & KONTEN)
+  shippingTitle?: string;
+  shippingBadge?: string;
+  shippingDescription?: string;
+  shippingHighlights?: string[];
+  shippingFooterNote?: string;
+
   // TAMPILAN FOOTER / BAGIAN BAWAH HALAMAN
   footerLogoSize?: 'sm' | 'md' | 'lg' | 'xl';
   footerCustomLogoPx?: number; // Nilai kustom piksel (misal: 36 - 120 px)
   footerLayoutAlign?: 'left' | 'center' | 'right'; // Rata kiri, tengah, kanan
   footerTextLayout?: 'horizontal' | 'stacked'; // Berdampingan atau bertumpuk vertikal
+  footerTaglinePosition?: 'side' | 'bottom'; // Tagline di samping (berdampingan) atau di bawah
   footerShowLogoText?: boolean; // Tampilkan teks nama brand pada logo footer
-  footerShowTagline?: boolean; // Tampilkan tagline di bawah logo footer
+  footerShowTagline?: boolean; // Tampilkan tagline di samping/bawah logo footer
   footerTaglineText?: string; // Teks kustom tagline pada footer
   footerAboutText?: string; // Teks deskripsi tentang toko di footer
   footerCopyrightText?: string; // Teks kustom hak cipta footer

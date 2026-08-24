@@ -50,6 +50,9 @@ import {
   Type,
   Layout,
   RefreshCw,
+  Phone,
+  MessageCircle,
+  Truck,
 } from 'lucide-react';
 import {
   Product,
@@ -677,8 +680,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-200 text-xs mb-5 leading-relaxed">
-                  Pendaftaran akun admin dibatasi khusus untuk Manager Store. Silakan masukkan kode otorisasi resmi:
-                  <strong className="block text-white font-mono mt-1">&ldquo;{MANAGER_ACCESS_CODE}&rdquo;</strong>
+                  Pendaftaran akun admin dibatasi khusus untuk Manager Store yang memiliki kode otorisasi resmi. Silakan masukkan kode akses Anda untuk melanjutkan.
                 </div>
 
                 {regError && (
@@ -692,13 +694,13 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     Kode Akses Khusus Manager
                   </label>
                   <input
-                    type="text"
+                    type="password"
                     required
                     autoComplete="off"
                     value={regAccessCode}
                     onChange={(e) => setRegAccessCode(e.target.value)}
-                    placeholder="Masukkan kode akses (cth: dear2226)"
-                    className="w-full text-sm font-mono tracking-wider px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-center uppercase"
+                    placeholder="Masukkan kode akses rahasia..."
+                    className="w-full text-sm font-mono tracking-wider px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-center"
                   />
                 </div>
 
@@ -1618,27 +1620,40 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     </div>
                   </div>
 
-                  {/* 6. Pengaturan Tampilan Bagian Bawah Halaman Beranda (Footer, Logo & Tata Letak) */}
+                  {/* 6. Pengaturan Logo di Footer (Kolom 1 - Khusus Logo Saja) */}
                   <div className="p-5 sm:p-6 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-5">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                      <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-                        <Layout className="w-4 h-4" />
-                        6. Tampilan Bagian Bawah Halaman Beranda (Footer, Logo & Tata Letak)
-                      </h3>
-                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold">
-                        Sinkron Logo Atas & Bawah
+                      <div>
+                        <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                          <Layout className="w-4 h-4" />
+                          6. Pengaturan Logo di Footer (Kolom 1 - Khusus Logo Saja)
+                        </h3>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Atur ukuran logo footer (pilihan cepat atau slider pixel presisi). Perubahan ukuran langsung disinkronkan ke tampilan footer utama.
+                        </p>
+                      </div>
+                      <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 rounded-full font-bold self-start sm:self-auto">
+                        Sinkron Otomatis (Live)
                       </span>
                     </div>
 
-                    {/* Footer Logo & Text Live Preview */}
+                    {/* Footer Logo Live Preview */}
                     <div className="p-4 rounded-2xl bg-slate-950/90 border border-slate-700">
                       <div className="flex items-center justify-between mb-3">
                         <span className="text-[11px] font-bold text-slate-300 flex items-center gap-1.5">
                           <Eye className="w-3.5 h-3.5 text-emerald-400" />
-                          Pratinjau Langsung Bagian Bawah (Footer Live Preview):
+                          Pratinjau Langsung Logo Footer (Live Preview Kolom 1):
                         </span>
-                        <span className="text-[10px] text-slate-400 font-mono">
-                          Ukuran: {settings.footerCustomLogoPx ? `${settings.footerCustomLogoPx}px` : (settings.footerLogoSize || 'md').toUpperCase()} &bull; Rata: {settings.footerLayoutAlign || 'left'}
+                        <span className="text-xs text-emerald-400 font-mono font-bold">
+                          {settings.footerCustomLogoPx
+                            ? `${settings.footerCustomLogoPx} px`
+                            : settings.footerLogoSize === 'sm'
+                            ? '48 px (Kecil)'
+                            : settings.footerLogoSize === 'lg'
+                            ? '96 px (Besar)'
+                            : settings.footerLogoSize === 'xl'
+                            ? '144 px (Ekstra)'
+                            : '64 px (Sedang)'} &bull; Rata: {(settings.footerLayoutAlign || 'left').toUpperCase()}
                         </span>
                       </div>
 
@@ -1652,26 +1667,16 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                               : 'items-start text-left'
                           }`}
                         >
-                          <div className="bg-white/95 p-3 rounded-2xl shadow-sm inline-block">
+                          <div className="inline-block">
                             <Logo
                               size={settings.footerLogoSize || 'md'}
-                              customPixelSize={settings.footerCustomLogoPx}
+                              customPx={settings.footerCustomLogoPx}
                               customLogoUrl={settings.customLogoUrl}
-                              textPrefix={settings.logoTextPrefix || 'SOLUSI'}
-                              textSuffix={settings.logoTextSuffix || 'RUMAHKU'}
-                              storeName={settings.storeName}
-                              showText={settings.footerShowLogoText !== false}
-                              showTagline={settings.footerShowTagline !== false}
-                              customTagline={settings.footerTaglineText || settings.tagline}
-                              layout={settings.footerTextLayout || 'stacked'}
+                              showText={false}
                               align={settings.footerLayoutAlign || 'left'}
+                              textColorMode="dark"
                             />
                           </div>
-
-                          <p className="mt-3 text-xs text-slate-400 max-w-lg leading-relaxed">
-                            {settings.footerAboutText ||
-                              'Distributor & supplier terpercaya penyedia alat listrik rumah tangga, lampu LED, perkakas teknik mekanik, dan kabel instalasi berstandar SNI.'}
-                          </p>
 
                           <div className="mt-4 pt-3 border-t border-slate-800 w-full text-[11px] text-slate-500">
                             {settings.footerCopyrightText
@@ -1686,24 +1691,38 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       {/* Logo Size Presets */}
                       <div>
                         <label className="font-semibold text-slate-300 block mb-1">
-                          Ukuran Logo Bagian Bawah (Footer Logo Size)
+                          Pilihan Cepat Ukuran Logo Footer (Presets)
                         </label>
                         <div className="grid grid-cols-4 gap-1.5">
-                          {(['sm', 'md', 'lg', 'xl'] as const).map((sz) => (
+                          {[
+                            { key: 'sm', label: 'Kecil', px: 48 },
+                            { key: 'md', label: 'Sedang', px: 64 },
+                            { key: 'lg', label: 'Besar', px: 96 },
+                            { key: 'xl', label: 'Ekstra', px: 144 },
+                          ].map((item) => (
                             <button
-                              key={sz}
+                              key={item.key}
                               type="button"
-                              onClick={() => setSettings({ ...settings, footerLogoSize: sz, footerCustomLogoPx: undefined })}
+                              onClick={() => {
+                                const updated = {
+                                  ...settings,
+                                  footerLogoSize: item.key as any,
+                                  footerCustomLogoPx: item.px,
+                                };
+                                setSettings(updated);
+                                storage.saveSettings(updated);
+                                onDataUpdated();
+                                showSuccessFeedback(`Ukuran logo footer diatur ke: ${item.label} (${item.px}px)`);
+                              }}
                               className={`py-2 rounded-xl text-xs font-bold transition-all ${
-                                (settings.footerLogoSize || 'md') === sz && !settings.footerCustomLogoPx
-                                  ? 'bg-emerald-600 text-white shadow-xs'
+                                (settings.footerCustomLogoPx === item.px ||
+                                  (!settings.footerCustomLogoPx && (settings.footerLogoSize || 'md') === item.key))
+                                  ? 'bg-emerald-600 text-white shadow-xs ring-1 ring-emerald-400'
                                   : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
                               }`}
                             >
-                              {sz === 'sm' && 'Kecil (40px)'}
-                              {sz === 'md' && 'Sedang (56px)'}
-                              {sz === 'lg' && 'Besar (72px)'}
-                              {sz === 'xl' && 'Ekstra (96px)'}
+                              <span>{item.label}</span>
+                              <span className="block text-[10px] opacity-80">{item.px}px</span>
                             </button>
                           ))}
                         </div>
@@ -1713,48 +1732,72 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                       <div>
                         <div className="flex items-center justify-between mb-1">
                           <label className="font-semibold text-slate-300 block">
-                            Atau Kustom Ukuran Logo (Slider Pixel)
+                            Atur Ukuran Presisi (Slider Pixel: 36px - 240px)
                           </label>
-                          <span className="text-emerald-400 font-mono font-bold text-xs">
-                            {settings.footerCustomLogoPx || (settings.footerLogoSize === 'sm' ? 40 : settings.footerLogoSize === 'lg' ? 72 : settings.footerLogoSize === 'xl' ? 96 : 56)} px
+                          <span className="text-emerald-400 font-mono font-bold text-xs bg-emerald-950/60 px-2 py-0.5 rounded-md border border-emerald-500/30">
+                            {settings.footerCustomLogoPx ||
+                              (settings.footerLogoSize === 'sm'
+                                ? 48
+                                : settings.footerLogoSize === 'lg'
+                                ? 96
+                                : settings.footerLogoSize === 'xl'
+                                ? 144
+                                : 64)}{' '}
+                            px
                           </span>
                         </div>
                         <input
                           type="range"
-                          min="32"
-                          max="140"
+                          min="36"
+                          max="240"
                           step="4"
                           value={
                             settings.footerCustomLogoPx ||
-                            (settings.footerLogoSize === 'sm' ? 40 : settings.footerLogoSize === 'lg' ? 72 : settings.footerLogoSize === 'xl' ? 96 : 56)
+                            (settings.footerLogoSize === 'sm'
+                              ? 48
+                              : settings.footerLogoSize === 'lg'
+                              ? 96
+                              : settings.footerLogoSize === 'xl'
+                              ? 144
+                              : 64)
                           }
-                          onChange={(e) =>
-                            setSettings({
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            const updated = {
                               ...settings,
-                              footerCustomLogoPx: Number(e.target.value),
-                            })
-                          }
+                              footerCustomLogoPx: val,
+                            };
+                            setSettings(updated);
+                            storage.saveSettings(updated);
+                            onDataUpdated();
+                          }}
                           className="w-full h-2 bg-slate-900 rounded-lg appearance-none cursor-pointer accent-emerald-500"
                         />
                         <div className="flex justify-between text-[10px] text-slate-500 mt-1">
-                          <span>32px</span>
-                          <span>Default (56px)</span>
-                          <span>140px</span>
+                          <span>36px (Kecil)</span>
+                          <span>64px (Standar)</span>
+                          <span>144px (Besar)</span>
+                          <span>240px (Maksimal)</span>
                         </div>
                       </div>
 
                       {/* Alignment */}
-                      <div>
+                      <div className="sm:col-span-2">
                         <label className="font-semibold text-slate-300 block mb-1">
-                          Tata Letak Rata Posisi Footer
+                          Tata Letak Rata Posisi Logo Footer
                         </label>
                         <div className="grid grid-cols-3 gap-1.5">
                           <button
                             type="button"
-                            onClick={() => setSettings({ ...settings, footerLayoutAlign: 'left' })}
+                            onClick={() => {
+                              const updated = { ...settings, footerLayoutAlign: 'left' as const };
+                              setSettings(updated);
+                              storage.saveSettings(updated);
+                              onDataUpdated();
+                            }}
                             className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                               (settings.footerLayoutAlign || 'left') === 'left'
-                                ? 'bg-emerald-600 text-white shadow-xs'
+                                ? 'bg-emerald-600 text-white shadow-xs ring-1 ring-emerald-400'
                                 : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
                             }`}
                           >
@@ -1763,10 +1806,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setSettings({ ...settings, footerLayoutAlign: 'center' })}
+                            onClick={() => {
+                              const updated = { ...settings, footerLayoutAlign: 'center' as const };
+                              setSettings(updated);
+                              storage.saveSettings(updated);
+                              onDataUpdated();
+                            }}
                             className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                               settings.footerLayoutAlign === 'center'
-                                ? 'bg-emerald-600 text-white shadow-xs'
+                                ? 'bg-emerald-600 text-white shadow-xs ring-1 ring-emerald-400'
                                 : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
                             }`}
                           >
@@ -1775,10 +1823,15 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           </button>
                           <button
                             type="button"
-                            onClick={() => setSettings({ ...settings, footerLayoutAlign: 'right' })}
+                            onClick={() => {
+                              const updated = { ...settings, footerLayoutAlign: 'right' as const };
+                              setSettings(updated);
+                              storage.saveSettings(updated);
+                              onDataUpdated();
+                            }}
                             className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                               settings.footerLayoutAlign === 'right'
-                                ? 'bg-emerald-600 text-white shadow-xs'
+                                ? 'bg-emerald-600 text-white shadow-xs ring-1 ring-emerald-400'
                                 : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
                             }`}
                           >
@@ -1788,76 +1841,8 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         </div>
                       </div>
 
-                      {/* Text Layout Direction */}
-                      <div>
-                        <label className="font-semibold text-slate-300 block mb-1">
-                          Orientasi Teks Brand pada Logo
-                        </label>
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => setSettings({ ...settings, footerTextLayout: 'stacked' })}
-                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                              (settings.footerTextLayout || 'stacked') === 'stacked'
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
-                            }`}
-                          >
-                            Bertumpuk (Vertikal)
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setSettings({ ...settings, footerTextLayout: 'horizontal' })}
-                            className={`py-2 px-3 rounded-xl text-xs font-bold transition-all ${
-                              settings.footerTextLayout === 'horizontal'
-                                ? 'bg-emerald-600 text-white shadow-xs'
-                                : 'bg-slate-900 border border-slate-700 text-slate-300 hover:bg-slate-700'
-                            }`}
-                          >
-                            Berdampingan (Horizontal)
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Toggles */}
-                      <div className="sm:col-span-2 flex flex-wrap items-center gap-4 pt-2">
-                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200">
-                          <input
-                            type="checkbox"
-                            checked={settings.footerShowLogoText !== false}
-                            onChange={(e) => setSettings({ ...settings, footerShowLogoText: e.target.checked })}
-                            className="rounded text-emerald-500 focus:ring-emerald-400 bg-slate-900 border-slate-700"
-                          />
-                          Tampilkan Teks Nama Toko di Logo Footer
-                        </label>
-
-                        <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-slate-200">
-                          <input
-                            type="checkbox"
-                            checked={settings.footerShowTagline !== false}
-                            onChange={(e) => setSettings({ ...settings, footerShowTagline: e.target.checked })}
-                            className="rounded text-emerald-500 focus:ring-emerald-400 bg-slate-900 border-slate-700"
-                          />
-                          Tampilkan Tagline / Slogan di Logo Footer
-                        </label>
-                      </div>
-
-                      {/* Custom Tagline Footer */}
-                      <div>
-                        <label className="font-semibold text-slate-300 block mb-1">
-                          Teks Tagline / Slogan Khusus Footer (Opsional)
-                        </label>
-                        <input
-                          type="text"
-                          value={settings.footerTaglineText || ''}
-                          onChange={(e) => setSettings({ ...settings, footerTaglineText: e.target.value })}
-                          placeholder={settings.tagline || 'Pusat Alat Listrik, Teknik & Rumah Tangga SNI'}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
-                        />
-                      </div>
-
                       {/* Custom Copyright */}
-                      <div>
+                      <div className="sm:col-span-2">
                         <label className="font-semibold text-slate-300 block mb-1">
                           Teks Hak Cipta (Copyright Footer)
                         </label>
@@ -1872,33 +1857,38 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           Gunakan <code>{'{year}'}</code> untuk tahun berjalan dan <code>{'{store}'}</code> untuk nama toko.
                         </span>
                       </div>
-
-                      {/* Custom About Text */}
-                      <div className="sm:col-span-2">
-                        <label className="font-semibold text-slate-300 block mb-1">
-                          Teks Deskripsi &ldquo;Tentang Toko&rdquo; di Footer
-                        </label>
-                        <textarea
-                          rows={2}
-                          value={settings.footerAboutText || ''}
-                          onChange={(e) => setSettings({ ...settings, footerAboutText: e.target.value })}
-                          placeholder="Distributor & supplier terpercaya penyedia alat listrik rumah tangga, lampu LED, perkakas teknik mekanik, dan kabel instalasi berstandar SNI."
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
-                        />
-                      </div>
                     </div>
 
-                    <div className="pt-4 border-t border-slate-700 flex justify-end">
+                    <div className="pt-4 border-t border-slate-700 flex flex-col sm:flex-row items-center justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = {
+                            ...settings,
+                            footerLogoSize: 'md' as const,
+                            footerCustomLogoPx: 64,
+                            footerLayoutAlign: 'left' as const,
+                          };
+                          setSettings(updated);
+                          storage.saveSettings(updated);
+                          onDataUpdated();
+                          showSuccessFeedback('Ukuran logo footer dikembalikan ke standar (64px).');
+                        }}
+                        className="text-xs text-slate-400 hover:text-slate-200 underline"
+                      >
+                        Reset ke Ukuran Standar (64px)
+                      </button>
+
                       <button
                         type="button"
                         onClick={() => {
                           storage.saveSettings(settings);
-                          showSuccessFeedback('Pengaturan Halaman Utama & Tampilan Footer berhasil disimpan!');
+                          showSuccessFeedback('Pengaturan Ukuran Logo Footer & Hak Cipta berhasil disimpan!');
                         }}
-                        className="px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center gap-2 active:scale-98 transition-all"
+                        className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md flex items-center justify-center gap-2 active:scale-98 transition-all"
                       >
                         <Save className="w-4 h-4" />
-                        Simpan Semua Pengaturan Halaman Utama & Footer
+                        Terapkan &amp; Simpan Pengaturan Footer
                       </button>
                     </div>
                   </div>
@@ -2729,13 +2719,77 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                               updatedList = Array.from(existingMap.values());
                             }
 
+                            // Auto-sync new product types from CSV
+                            const currentTypes = storage.getProductTypes();
+                            const knownTypeNames = new Set(
+                              currentTypes.map((t) => t.name.trim().toLowerCase())
+                            );
+                            const currentCats = storage.getCategories();
+                            const catMap = new Map<string, string>();
+                            currentCats.forEach((c) => catMap.set(c.name.trim().toLowerCase(), c.id));
+
+                            let newTypesCount = 0;
+                            const newTypesToAdd: ProductTypeItem[] = [];
+
+                            parsed.forEach((prod) => {
+                              const typeName = (prod.type || '').trim();
+                              if (typeName && !knownTypeNames.has(typeName.toLowerCase())) {
+                                knownTypeNames.add(typeName.toLowerCase());
+                                const catNameLower = (prod.category || '').trim().toLowerCase();
+                                const matchedCatId = catMap.get(catNameLower) || currentCats[0]?.id || 'cat-listrik';
+                                const matchedCatObj = currentCats.find((c) => c.id === matchedCatId);
+                                newTypesToAdd.push({
+                                  id: `type-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                                  name: typeName,
+                                  categoryId: matchedCatId,
+                                  categoryName: matchedCatObj?.name || prod.category || 'Peralatan Listrik',
+                                  badge: 'Auto Sync CSV',
+                                  description: `Tipe produk ${typeName} untuk kategori ${prod.category || 'Listrik/Teknik'}.`,
+                                });
+                                newTypesCount++;
+                              }
+                            });
+
+                            if (newTypesToAdd.length > 0) {
+                              const updatedAllTypes = [...currentTypes, ...newTypesToAdd];
+                              storage.saveProductTypes(updatedAllTypes);
+                              setProductTypes(updatedAllTypes);
+                            }
+
+                            // Auto-sync new brands from CSV
+                            const currentBrands = storage.getBrands();
+                            const knownBrandNames = new Set(currentBrands.map((b) => b.name.trim().toLowerCase()));
+                            const newBrandsToAdd: BrandItem[] = [];
+
+                            parsed.forEach((prod) => {
+                              const brandName = (prod.brand || '').trim();
+                              if (brandName && !knownBrandNames.has(brandName.toLowerCase())) {
+                                knownBrandNames.add(brandName.toLowerCase());
+                                newBrandsToAdd.push({
+                                  id: `brand-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+                                  name: brandName,
+                                  slug: brandName.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+                                  logoUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=200',
+                                  description: `Merk ${brandName} resmi berstandar SNI & original.`,
+                                  isOfficialDistributor: true,
+                                });
+                              }
+                            });
+
+                            if (newBrandsToAdd.length > 0) {
+                              const updatedAllBrands = [...currentBrands, ...newBrandsToAdd];
+                              storage.saveBrands(updatedAllBrands);
+                              setBrands(updatedAllBrands);
+                            }
+
                             storage.saveProducts(updatedList);
                             setProducts(updatedList);
                             if (appwriteService.isConfigured(settings.appwriteConfig)) {
                               appwriteService.pushAllProductsToAppwrite(settings.appwriteConfig, updatedList).catch(() => {});
                             }
                             setIsImportModalOpen(false);
-                            showSuccessFeedback(`Berhasil mengimpor ${parsed.length} data produk dan disinkronkan!`);
+                            const typeSyncMsg = newTypesCount > 0 ? ` (+${newTypesCount} tipe produk baru otomatis ditambahkan)` : '';
+                            showSuccessFeedback(`Berhasil mengimpor ${parsed.length} data produk${typeSyncMsg}!`);
                           } catch (err: any) {
                             setImportError(`Gagal membaca CSV: ${err.message || 'Format tidak valid'}`);
                           }
@@ -3399,41 +3453,45 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                 </div>
               )}
 
-              {/* 6. KELOLA TAMPILAN, PROFIL & GALERI (HINGGA 10 MEDIA) */}
+              {/* 6. KELOLA TAMPILAN, PROFIL, KONTAK, SOSMED & EKSPEDISI (HINGGA 10 MEDIA) */}
               {activeTab === 'appearance' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-black text-white">Kelola Tampilan, Profil & Galeri</h2>
+                    <h2 className="text-xl sm:text-2xl font-black text-white">
+                      Kelola Tampilan, Profil, Sosmed &amp; Ekspedisi
+                    </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Atur penjelasan konteks (&ldquo;Untuk siapa dan apa tujuannya&rdquo;), kontak toko, dan 10 media galeri.
+                      Atur kontak WhatsApp, batas stok minimum, akun media sosial (FB, IG, TikTok), informasi pengiriman &amp; ekspedisi, serta 10 media galeri profil.
                     </p>
                   </div>
 
-                  {/* Context & Purpose Editor */}
-                  <div className="p-5 rounded-2xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                  {/* 1. Kontak WhatsApp, Jam Operasional & Batas Stok Minimum */}
+                  <div className="p-5 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4 text-xs">
                     <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      Konteks: Jelaskan Untuk Siapa Aplikasi Ini & Apa Tujuannya
+                      <Phone className="w-4 h-4" />
+                      Kontak WhatsApp, Operasional Toko &amp; Batas Stok
                     </h3>
-                    <textarea
-                      rows={3}
-                      value={settings.contextAbout}
-                      onChange={(e) => setSettings({ ...settings, contextAbout: e.target.value })}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
-                      placeholder="Jelaskan sasaran pengguna (pemilik rumah, teknisi, kontraktor) dan tujuan toko..."
-                    />
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="font-semibold text-slate-300 block mb-1">Nomor WhatsApp Toko</label>
-                        <input
-                          type="text"
-                          value={settings.phoneWhatsApp}
-                          onChange={(e) => setSettings({ ...settings, phoneWhatsApp: e.target.value })}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white"
-                          placeholder="628123456789"
-                        />
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Nomor WhatsApp Toko (Format Internasional contoh: 628123456789)
+                        </label>
+                        <div className="relative">
+                          <MessageCircle className="w-4 h-4 text-emerald-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                          <input
+                            type="text"
+                            value={settings.phoneWhatsApp || ''}
+                            onChange={(e) => setSettings({ ...settings, phoneWhatsApp: e.target.value })}
+                            className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs focus:ring-2 focus:ring-emerald-500"
+                            placeholder="628123456789"
+                          />
+                        </div>
+                        <span className="text-[10px] text-slate-400 mt-1 block">
+                          Digunakan untuk tombol Pesan WA, Konsultasi, dan kontak footer.
+                        </span>
                       </div>
+
                       <div>
                         <label className="font-semibold text-slate-300 block mb-1">
                           Batas Peringatan Stok Minimum (&le; Unit)
@@ -3441,31 +3499,274 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         <input
                           type="number"
                           value={settings.lowStockThreshold || 20}
-                          onChange={(e) => setSettings({ ...settings, lowStockThreshold: Number(e.target.value) || 20 })}
-                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-amber-300 font-bold"
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              lowStockThreshold: Number(e.target.value) || 20,
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-amber-600/60 text-amber-300 font-mono font-bold text-xs focus:ring-2 focus:ring-amber-500"
+                          placeholder="20"
+                        />
+                        <span className="text-[10px] text-slate-400 mt-1 block">
+                          Produk dengan stok di bawah angka ini akan otomatis masuk ke filter &ldquo;Stok Menipis&rdquo;.
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Hari Operasional Toko
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.operationalDays || ''}
+                          onChange={(e) => setSettings({ ...settings, operationalDays: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Senin - Sabtu (Kecuali Hari Libur Nasional)"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Jam Operasional Toko
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.businessHours || ''}
+                          onChange={(e) => setSettings({ ...settings, businessHours: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="08.00 - 17.30 WIB"
                         />
                       </div>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        storage.saveSettings(settings);
-                        showSuccessFeedback('Pengaturan toko & konteks berhasil disimpan!');
-                      }}
-                      className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
-                    >
-                      Simpan Konteks & Kontak
-                    </button>
                   </div>
 
-                  {/* Gallery Editor (Up to 10 items) */}
-                  <div className="p-5 rounded-2xl bg-slate-800 border border-slate-700 space-y-4 text-xs">
+                  {/* 2. Tautan Media Sosial Resmi (Facebook, Instagram, TikTok) */}
+                  <div className="p-5 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4 text-xs">
+                    <h3 className="text-sm font-bold text-sky-400 flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      Tautan Media Sosial Resmi (Facebook, Instagram, TikTok)
+                    </h3>
+                    <p className="text-slate-400 text-[11px]">
+                      Tautan ini akan tampil pada bilah footer dan halaman Hubungi Kami / Tentang Kami untuk memudahkan pelanggan terhubung.
+                    </p>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="font-semibold text-blue-400 block mb-1">
+                          Facebook URL
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.facebookUrl || ''}
+                          onChange={(e) => setSettings({ ...settings, facebookUrl: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="https://facebook.com/solusirumahku"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-pink-400 block mb-1">
+                          Instagram URL
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.instagramUrl || ''}
+                          onChange={(e) => setSettings({ ...settings, instagramUrl: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="https://instagram.com/solusirumahku.id"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-rose-400 block mb-1">
+                          TikTok URL
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.tiktokUrl || ''}
+                          onChange={(e) => setSettings({ ...settings, tiktokUrl: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="https://tiktok.com/@solusirumahku.official"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Editor Tampilan Pengiriman & Ekspedisi */}
+                  <div className="p-5 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4 text-xs">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                        <ImageIcon className="w-4 h-4 text-emerald-400" />
-                        Galeri Media Profil Toko ({galleryMedia.length} / 10 Item)
+                      <h3 className="text-sm font-bold text-amber-400 flex items-center gap-2">
+                        <Truck className="w-4 h-4" />
+                        Editor Tampilan &ldquo;Pengiriman &amp; Ekspedisi&rdquo;
                       </h3>
+                      <span className="text-[10px] text-slate-400 uppercase font-bold bg-slate-900 px-2 py-0.5 rounded-md border border-slate-700">
+                        Live di Halaman Kontak &amp; Tentang
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Badge / Label Pengiriman
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.shippingBadge || ''}
+                          onChange={(e) => setSettings({ ...settings, shippingBadge: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Pengiriman & Ekspedisi Terpercaya"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Judul Bagian Pengiriman
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.shippingTitle || ''}
+                          onChange={(e) => setSettings({ ...settings, shippingTitle: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Jangkauan Pengiriman Seluruh Indonesia"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Deskripsi Lengkap Pengiriman &amp; Ekspedisi
+                        </label>
+                        <textarea
+                          rows={3}
+                          value={settings.shippingDescription || ''}
+                          onChange={(e) => setSettings({ ...settings, shippingDescription: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Kami melayani pengiriman peralatan proyek, rol kabel, instalasi lampu, dan perkakas teknik ke seluruh wilayah Indonesia melalui ekspedisi kargo terpercaya, kurir instan, maupun ambil langsung di toko."
+                        />
+                      </div>
+
+                      {/* Highlight Points list editor */}
+                      <div className="sm:col-span-2 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="font-semibold text-slate-300">
+                            Poin Keunggulan / Pilihan Ekspedisi ({ (settings.shippingHighlights || []).length } Poin)
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const list = [...(settings.shippingHighlights || [])];
+                              list.push('Layanan baru atau mitra ekspedisi tambahan');
+                              setSettings({ ...settings, shippingHighlights: list });
+                            }}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold"
+                          >
+                            + Tambah Poin
+                          </button>
+                        </div>
+
+                        {(settings.shippingHighlights || []).map((highlight, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <span className="text-[10px] text-slate-400 font-mono w-6">#{idx + 1}</span>
+                            <input
+                              type="text"
+                              value={highlight}
+                              onChange={(e) => {
+                                const list = [...(settings.shippingHighlights || [])];
+                                list[idx] = e.target.value;
+                                setSettings({ ...settings, shippingHighlights: list });
+                              }}
+                              className="flex-1 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const list = (settings.shippingHighlights || []).filter((_, i) => i !== idx);
+                                setSettings({ ...settings, shippingHighlights: list });
+                              }}
+                              className="p-1.5 rounded-lg bg-slate-900 text-rose-400 hover:text-rose-300"
+                              title="Hapus Poin"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Catatan Kaki Pengiriman (Footer Note)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.shippingFooterNote || ''}
+                          onChange={(e) => setSettings({ ...settings, shippingFooterNote: e.target.value })}
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                          placeholder="Solusi Rumahku • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Konteks Sasaran Pengguna & Alamat Kontak */}
+                  <div className="p-5 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4 text-xs">
+                    <h3 className="text-sm font-bold text-emerald-400 flex items-center gap-2">
+                      <FileText className="w-4 h-4" />
+                      Konteks Toko &amp; Alamat Kontak Toko
+                    </h3>
+
+                    <div>
+                      <label className="font-semibold text-slate-300 block mb-1">
+                        Konteks: Jelaskan Untuk Siapa Aplikasi Ini &amp; Apa Tujuannya
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={settings.contextAbout || ''}
+                        onChange={(e) => setSettings({ ...settings, contextAbout: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                        placeholder="Jelaskan sasaran pengguna (pemilik rumah, teknisi, kontraktor) dan tujuan toko..."
+                      />
+                    </div>
+
+                    <div className="pt-1">
+                      <label className="font-semibold text-slate-300 block mb-1">
+                        Alamat Toko (Bilah Kontak &amp; Operasional)
+                      </label>
+                      <input
+                        type="text"
+                        value={settings.storeAddress || ''}
+                        onChange={(e) => setSettings({ ...settings, storeAddress: e.target.value })}
+                        className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
+                        placeholder="Pusat Niaga Pertokoan Listrik & Perkakas Teknik Indonesia"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          storage.saveSettings(settings);
+                          showSuccessFeedback('Pengaturan Tampilan, Sosmed & Ekspedisi berhasil disimpan!');
+                        }}
+                        className="px-6 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold flex items-center gap-2 shadow-md"
+                      >
+                        <Save className="w-4 h-4" />
+                        Simpan Semua Pengaturan Profil, Sosmed &amp; Ekspedisi
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 5. Galeri Media Profil Toko (Up to 10 items) */}
+                  <div className="p-5 rounded-3xl bg-slate-800/90 border border-slate-700 space-y-4 text-xs">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <ImageIcon className="w-4 h-4 text-emerald-400" />
+                          Galeri Media Profil Toko ({galleryMedia.length} / 10 Item)
+                        </h3>
+                        <p className="text-slate-400 text-[11px] mt-0.5">
+                          Tampil di Beranda Tentang Kami / Galeri Profil Toko.
+                        </p>
+                      </div>
                       {galleryMedia.length < 10 && (
                         <button
                           onClick={() => {
@@ -3483,7 +3784,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                             setGalleryMedia(updated);
                             showSuccessFeedback('Item galeri baru ditambahkan.');
                           }}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold"
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold"
                         >
                           + Tambah Media
                         </button>
@@ -3492,7 +3793,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       {galleryMedia.map((g, idx) => (
-                        <div key={g.id} className="p-3 rounded-xl bg-slate-900 border border-slate-700 space-y-2">
+                        <div key={g.id} className="p-3.5 rounded-2xl bg-slate-900 border border-slate-700 space-y-2">
                           <div className="flex items-center justify-between text-[11px] font-bold text-slate-300">
                             <span>Media #{idx + 1} ({g.type.toUpperCase()})</span>
                             <button
