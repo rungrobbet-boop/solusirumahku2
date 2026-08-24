@@ -119,21 +119,46 @@ export default function App() {
     refreshAppData();
   }, []);
 
-  // Real-time synchronization with Appwrite Database
+  // Real-time synchronization with Appwrite Database + Initial Auto-Fetch
   useEffect(() => {
+    let unsubRealtime: (() => void) | null = null;
+    let isMounted = true;
+
     if (appwriteService.isConfigured(settings.appwriteConfig)) {
-      const unsub = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
-        if (type === 'create' || type === 'update') {
-          storage.saveProduct(item as Product);
-        } else if (type === 'delete') {
-          storage.deleteProduct((item as { id: string }).id);
-        }
-        setProducts(storage.getProducts());
-      });
-      return () => {
-        unsub();
-      };
+      // 1. Initial Fetch to test and guarantee fresh products across all devices/browsers
+      appwriteService
+        .fetchAllProducts(settings.appwriteConfig)
+        .then((res) => {
+          if (!isMounted) return;
+          if (res.success && res.products && res.products.length > 0) {
+            storage.saveProducts(res.products);
+            setProducts(res.products);
+          }
+
+          // 2. Realtime listener for live additions/updates/deletions only after verified fetch
+          if (res.success && isMounted) {
+            unsubRealtime = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
+              if (!isMounted) return;
+              if (type === 'create' || type === 'update') {
+                storage.saveProduct(item as Product);
+              } else if (type === 'delete') {
+                storage.deleteProduct((item as { id: string }).id);
+              }
+              setProducts(storage.getProducts());
+            });
+          }
+        })
+        .catch((err) => {
+          console.warn('Gagal memuat produk awal dari Appwrite:', err);
+        });
     }
+
+    return () => {
+      isMounted = false;
+      if (unsubRealtime) {
+        unsubRealtime();
+      }
+    };
   }, [settings.appwriteConfig]);
 
   // Update cart in storage

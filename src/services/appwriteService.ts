@@ -14,8 +14,11 @@ export class AppwriteService {
 
   constructor(config?: StoreSettings['appwriteConfig']) {
     this.client = new Client();
-    if (config && config.isEnabled && config.endpoint && config.projectId && config.projectId.trim()) {
-      this.client.setEndpoint(config.endpoint).setProject(config.projectId.trim());
+    if (config && config.isEnabled && config.endpoint?.trim() && config.projectId?.trim()) {
+      const cleanProj = config.projectId.trim();
+      if (cleanProj && cleanProj.length > 2 && !cleanProj.includes('placeholder')) {
+        this.client.setEndpoint(config.endpoint.trim()).setProject(cleanProj);
+      }
     }
     this.databases = new Databases(this.client);
     this.storage = new Storage(this.client);
@@ -23,11 +26,15 @@ export class AppwriteService {
   }
 
   updateConfig(config?: StoreSettings['appwriteConfig']) {
-    if (config && config.endpoint && config.projectId && config.projectId.trim()) {
-      this.client = new Client().setEndpoint(config.endpoint).setProject(config.projectId.trim());
-      this.databases = new Databases(this.client);
-      this.storage = new Storage(this.client);
-      this.account = new Account(this.client);
+    if (config && config.endpoint?.trim() && config.projectId?.trim()) {
+      const cleanEndpoint = config.endpoint.trim();
+      const cleanProject = config.projectId.trim();
+      if (cleanProject && cleanProject.length > 2 && !cleanProject.includes('placeholder')) {
+        this.client = new Client().setEndpoint(cleanEndpoint).setProject(cleanProject);
+        this.databases = new Databases(this.client);
+        this.storage = new Storage(this.client);
+        this.account = new Account(this.client);
+      }
     }
   }
 
@@ -37,8 +44,23 @@ export class AppwriteService {
     if (!config.endpoint || !config.projectId || !config.databaseId || !config.productsCollectionId) {
       return false;
     }
-    const cleanId = config.projectId.trim().toLowerCase();
-    if (!cleanId || cleanId === 'solusi-rumahku-app' || cleanId === 'project-id' || cleanId === 'your-project-id') {
+    const cleanEndpoint = config.endpoint.trim();
+    const cleanProject = config.projectId.trim();
+    const cleanDb = config.databaseId.trim();
+    const cleanCol = config.productsCollectionId.trim();
+
+    if (!cleanEndpoint || !cleanProject || !cleanDb || !cleanCol) {
+      return false;
+    }
+
+    const cleanId = cleanProject.toLowerCase();
+    if (
+      cleanId.length < 3 ||
+      cleanId === 'solusi-rumahku-app' ||
+      cleanId === 'project-id' ||
+      cleanId === 'your-project-id' ||
+      cleanId.includes('placeholder')
+    ) {
       return false;
     }
     return true;
@@ -284,8 +306,19 @@ export class AppwriteService {
     }
 
     try {
+      if (this.unsubscribeRealtime) {
+        try {
+          this.unsubscribeRealtime();
+        } catch {
+          // ignore
+        }
+        this.unsubscribeRealtime = null;
+      }
+
       this.updateConfig(config);
-      const channel = `databases.${config.databaseId}.collections.${config.productsCollectionId}.documents`;
+      const cleanDb = config.databaseId.trim();
+      const cleanCol = config.productsCollectionId.trim();
+      const channel = `databases.${cleanDb}.collections.${cleanCol}.documents`;
       
       const unsubscribe = this.client.subscribe(channel, (response: any) => {
         try {
@@ -315,6 +348,9 @@ export class AppwriteService {
           }
         } catch {
           // ignore cleanup errors
+        }
+        if (this.unsubscribeRealtime === unsubscribe) {
+          this.unsubscribeRealtime = null;
         }
       };
     } catch (err) {

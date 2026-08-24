@@ -4678,12 +4678,31 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                     </div>
                     <ul className="list-disc list-inside space-y-1 text-slate-300">
                       <li>
-                        <strong className="text-white">Realtime Aktif:</strong> Setiap kali Anda mengupdate collection di Appwrite atau sebaliknya, perubahan pada aplikasi saat ini <strong>langsung realtime terupdate</strong> tanpa perlu me-refresh halaman.
+                        <strong className="text-white">Realtime Aktif:</strong> Setiap kali produk ditambah/diubah/dihapus, data langsung terupdate secara real-time ke seluruh pengunjung web yang sedang membuka aplikasi.
                       </li>
                       <li>
-                        <strong className="text-white">Impor & Ekspor Langsung di Aplikasi:</strong> Anda <strong>tidak perlu membuka konsol Appwrite manual</strong>. Anda bisa langsung melakukan Impor CSV, Tambah Produk, Edit Stok & Harga, atau Hapus Produk langsung dari panel Admin ini — semua perubahan akan otomatis di-sync ke database Appwrite!
+                        <strong className="text-white">Sinkron Otomatis Lintas Perangkat:</strong> Saat aplikasi dibuka di browser baru atau HP, aplikasi akan otomatis memuat produk terbaru dari Appwrite.
                       </li>
                     </ul>
+                  </div>
+
+                  {/* Panduan Izin Permissions 'Any' di Appwrite Console */}
+                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-xs space-y-2">
+                    <div className="font-bold text-amber-300 flex items-center gap-1.5 text-sm">
+                      <ShieldCheck className="w-4 h-4 text-amber-400" />
+                      PENTING: Aturan Izin Akses (Permissions) di Konsol Appwrite
+                    </div>
+                    <p className="text-slate-300 leading-relaxed">
+                      Agar produk dapat dibaca oleh pengunjung dari <strong>browser lain, HP, atau mode incognito</strong> tanpa harus login:
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-300 bg-slate-900/80 p-3 rounded-xl border border-slate-700">
+                      <li>Buka <a href="https://cloud.appwrite.io" target="_blank" rel="noopener noreferrer" className="text-amber-400 underline font-bold">Appwrite Cloud Console</a> &rarr; Pilih Proyek Anda.</li>
+                      <li>Buka menu <strong>Databases</strong> &rarr; Pilih Database Anda &rarr; Klik Collection <strong>Products</strong>.</li>
+                      <li>Pilih tab <strong>Settings</strong> &rarr; scroll ke bagian <strong>Permissions</strong>.</li>
+                      <li>Klik <strong>+ Add Role</strong> &rarr; Pilih <strong>Any</strong> (atau <em>Guests &amp; Users</em>).</li>
+                      <li>Centang <strong>Read</strong> (wajib agar pengunjung HP bisa melihat produk) dan centang <strong>Create, Update, Delete</strong> jika ingin admin web dapat mengelola langsung.</li>
+                      <li>Klik tombol <strong>Update</strong> di kanan bawah.</li>
+                    </ol>
                   </div>
 
                   {appwriteTestResult && (

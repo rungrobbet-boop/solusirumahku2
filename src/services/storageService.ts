@@ -298,7 +298,42 @@ class StorageService {
     const merged: StoreSettings = {
       ...INITIAL_STORE_SETTINGS,
       ...raw,
+      appwriteConfig: {
+        ...INITIAL_STORE_SETTINGS.appwriteConfig,
+        ...(raw.appwriteConfig || {}),
+      },
     };
+
+    // Auto-inject Vite environment variables (e.g., from Netlify build / .env) if available
+    try {
+      const envEndpoint = (import.meta as any).env?.VITE_APPWRITE_ENDPOINT;
+      const envProjectId = (import.meta as any).env?.VITE_APPWRITE_PROJECT_ID;
+      const envDatabaseId = (import.meta as any).env?.VITE_APPWRITE_DATABASE_ID;
+      const envProductsColId = (import.meta as any).env?.VITE_APPWRITE_PRODUCTS_COLLECTION_ID;
+      const envIsEnabled = (import.meta as any).env?.VITE_APPWRITE_IS_ENABLED;
+
+      if (envEndpoint && (!merged.appwriteConfig.endpoint || merged.appwriteConfig.endpoint.trim() === '')) {
+        merged.appwriteConfig.endpoint = envEndpoint;
+      }
+      if (envProjectId && (!merged.appwriteConfig.projectId || merged.appwriteConfig.projectId.trim() === '')) {
+        merged.appwriteConfig.projectId = envProjectId;
+      }
+      if (envDatabaseId && (!merged.appwriteConfig.databaseId || merged.appwriteConfig.databaseId.trim() === '')) {
+        merged.appwriteConfig.databaseId = envDatabaseId;
+      }
+      if (envProductsColId && (!merged.appwriteConfig.productsCollectionId || merged.appwriteConfig.productsCollectionId.trim() === '')) {
+        merged.appwriteConfig.productsCollectionId = envProductsColId;
+      }
+      if (envIsEnabled !== undefined && envIsEnabled !== null && envIsEnabled !== '') {
+        const wantsEnabled = envIsEnabled === 'true' || envIsEnabled === true;
+        if (wantsEnabled && merged.appwriteConfig.projectId?.trim() && merged.appwriteConfig.databaseId?.trim() && merged.appwriteConfig.productsCollectionId?.trim()) {
+          merged.appwriteConfig.isEnabled = true;
+        }
+      }
+    } catch {
+      // Ignore if import.meta.env is unavailable
+    }
+
     if (typeof merged.lowStockThreshold !== 'number' || isNaN(merged.lowStockThreshold) || merged.lowStockThreshold <= 0) {
       merged.lowStockThreshold = 20;
     }
