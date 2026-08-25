@@ -83,6 +83,11 @@ export default function App() {
   // Selected Product for detail modal
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
+  // Pagination & Offline Persistence state for Appwrite
+  const [lastVisible, setLastVisible] = useState<string | null>(null);
+  const [hasMoreProducts, setHasMoreProducts] = useState(false);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] = useState(false);
+
   // Selected Info & Trend article for detail modal
   const [selectedArticle, setSelectedArticle] = useState<InfoTrendItem | null>(null);
 
@@ -117,7 +122,63 @@ export default function App() {
 
   useEffect(() => {
     refreshAppData();
+    // Enable offline persistence caching to drastically reduce Appwrite read costs
+    appwriteService.enablePersistence({ enabled: true, ttlMs: 15 * 60 * 1000 });
   }, []);
+
+  // Fetch First Page (Cursor-based, Limit 20) to save reads
+  const fetchProductsFirstPage = async (forceRefresh = false) => {
+    if (!appwriteService.isConfigured(settings.appwriteConfig)) return;
+    try {
+      const res = await appwriteService.fetchProductsPage(settings.appwriteConfig, {
+        limit: 20,
+        lastVisibleId: null,
+        forceRefresh,
+      });
+      if (res.success && res.products) {
+        if (res.products.length > 0) {
+          // Merge with local fallback if any
+          storage.saveProducts(res.products);
+          setProducts(res.products);
+        }
+        setLastVisible(res.lastVisible);
+        setHasMoreProducts(res.hasMore);
+      }
+    } catch (err) {
+      console.warn('Gagal memuat halaman pertama produk:', err);
+    }
+  };
+
+  // Fetch Next Page (Cursor-based using startAfter / cursorAfter(lastVisible))
+  const fetchProductsNextPage = async () => {
+    if (!appwriteService.isConfigured(settings.appwriteConfig) || !lastVisible || !hasMoreProducts || isLoadingMoreProducts) {
+      return;
+    }
+    setIsLoadingMoreProducts(true);
+    try {
+      const res = await appwriteService.fetchProductsPage(settings.appwriteConfig, {
+        limit: 20,
+        lastVisibleId: lastVisible,
+      });
+      if (res.success && res.products.length > 0) {
+        setProducts((prev) => {
+          const existingIds = new Set(prev.map((p) => p.id));
+          const newItems = res.products.filter((p) => !existingIds.has(p.id));
+          const updated = [...prev, ...newItems];
+          storage.saveProducts(updated);
+          return updated;
+        });
+        setLastVisible(res.lastVisible);
+        setHasMoreProducts(res.hasMore);
+      } else {
+        setHasMoreProducts(false);
+      }
+    } catch (err) {
+      console.warn('Gagal memuat halaman berikutnya:', err);
+    } finally {
+      setIsLoadingMoreProducts(false);
+    }
+  };
 
   // Real-time synchronization with Appwrite Database + Initial Auto-Fetch (Products & Store Settings)
   useEffect(() => {
@@ -126,34 +187,33 @@ export default function App() {
     let isMounted = true;
 
     if (appwriteService.isConfigured(settings.appwriteConfig)) {
-      // 1. Initial Fetch Products to guarantee fresh products across all devices/browsers
-      appwriteService
-        .fetchAllProducts(settings.appwriteConfig)
-        .then((res) => {
-          if (!isMounted) return;
-          if (res.success && res.products && res.products.length > 0) {
-            storage.saveProducts(res.products);
-            setProducts(res.products);
-          }
+      // 1. Initial Page Fetch (20 products max per page, cursor-based pagination)
+      fetchProductsFirstPage();
 
-          // 2. Realtime listener for live product additions/updates/deletions
-          if (res.success && isMounted) {
-            unsubProducts = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
-              if (!isMounted) return;
-              if (type === 'create' || type === 'update') {
-                storage.saveProduct(item as Product);
-              } else if (type === 'delete') {
-                storage.deleteProduct((item as { id: string }).id);
-              }
-              setProducts(storage.getProducts());
-            });
-          }
-        })
-        .catch((err) => {
-          console.warn('Gagal memuat produk awal dari Appwrite:', err);
-        });
+      // 2. Realtime listener for live product additions/updates/deletions (does not re-read entire collection)
+      unsubProducts = appwriteService.subscribeToProducts(settings.appwriteConfig, (type, item) => {
+        if (!isMounted) return;
+        if (type === 'create' || type === 'update') {
+          const product = item as Product;
+          storage.saveProduct(product);
+          setProducts((prev) => {
+            const idx = prev.findIndex((p) => p.id === product.id);
+            if (idx > -1) {
+              const copy = [...prev];
+              copy[idx] = product;
+              return copy;
+            } else {
+              return [product, ...prev];
+            }
+          });
+        } else if (type === 'delete') {
+          const id = (item as { id: string }).id;
+          storage.deleteProduct(id);
+          setProducts((prev) => prev.filter((p) => p.id !== id));
+        }
+      });
 
-      // 3. Initial Fetch Store Settings (Logo, WhatsApp, Nama Toko, Banner, Kontak)
+      // 3. Initial Fetch Store Settings (Logo, WhatsApp, Nama Toko, Banner, Kontak) with Cache Check
       appwriteService
         .fetchStoreSettings(settings.appwriteConfig)
         .then((res) => {
@@ -948,6 +1008,9 @@ export default function App() {
             onSelectProduct={(p) => setSelectedProduct(p)}
             onAddToCart={handleAddToCart}
             initialSearchQuery={headerSearch}
+            hasMoreProducts={hasMoreProducts}
+            isLoadingMore={isLoadingMoreProducts}
+            onLoadMoreProducts={fetchProductsNextPage}
           />
         )}
 

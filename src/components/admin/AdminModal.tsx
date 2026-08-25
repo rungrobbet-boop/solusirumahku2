@@ -53,6 +53,7 @@ import {
   Phone,
   MessageCircle,
   Truck,
+  Store,
 } from 'lucide-react';
 import {
   Product,
@@ -4821,6 +4822,27 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           placeholder="products"
                         />
                       </div>
+
+                      <div className="sm:col-span-2">
+                        <label className="font-semibold text-slate-300 block mb-1">
+                          Collection ID untuk Pengaturan Toko (Logo, WA, Nama Toko, Banner, Kontak)
+                        </label>
+                        <input
+                          type="text"
+                          value={settings.appwriteConfig.infoCollectionId || ''}
+                          onChange={(e) =>
+                            setSettings({
+                              ...settings,
+                              appwriteConfig: { ...settings.appwriteConfig, infoCollectionId: e.target.value },
+                            })
+                          }
+                          className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-mono text-xs"
+                          placeholder="settings (default: settings)"
+                        />
+                        <p className="text-[11px] text-slate-400 mt-1">
+                          Koleksi ini menyimpan konfigurasi global toko (Logo URL, Nomor WhatsApp, Nama Toko, Banner Hero, Info Kontak).
+                        </p>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 pt-3 border-t border-slate-700">
@@ -4842,19 +4864,87 @@ export const AdminModal: React.FC<AdminModalProps> = ({
 
                       <button
                         type="button"
-                        onClick={() => {
-                          storage.saveSettings(settings);
+                        onClick={async () => {
+                          await handleSaveAndSyncSettings(settings, 'Konfigurasi Appwrite & Pengaturan Toko berhasil disimpan dan disinkronkan!');
                           appwriteService.updateConfig(settings.appwriteConfig);
-                          showSuccessFeedback('Konfigurasi Appwrite berhasil disimpan!');
                         }}
-                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold"
+                        className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-1.5"
                       >
-                        Simpan Konfigurasi
+                        <Save className="w-4 h-4" />
+                        Simpan Konfigurasi &amp; Sinkronkan
                       </button>
                     </div>
                   </div>
 
-                  {/* Push & Pull Actions */}
+                  {/* Push & Pull Store Settings (Logo, WA, Store Name, Banner) */}
+                  <div className="p-5 rounded-2xl bg-slate-800 border border-slate-700 space-y-4">
+                    <h3 className="font-bold text-white text-sm flex items-center gap-2">
+                      <Store className="w-4 h-4 text-emerald-400" />
+                      Sinkronisasi Pengaturan Toko (Logo, WhatsApp, Nama Toko, Banner, Kontak)
+                    </h3>
+                    <p className="text-slate-400 text-xs">
+                      Pastikan perubahan logo, nomor WhatsApp, nama toko, banner hero, dan informasi kontak tersimpan ke Cloud Appwrite agar langsung muncul di seluruh HP dan pengunjung secara realtime.
+                    </p>
+
+                    {appwriteSettingsProgress && (
+                      <div className="p-3 bg-slate-950 rounded-xl border border-slate-700 font-mono text-xs text-emerald-300">
+                        {appwriteSettingsProgress}
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap items-center gap-3 pt-2">
+                      <button
+                        type="button"
+                        disabled={appwriteSettingsPushing}
+                        onClick={async () => {
+                          setAppwriteSettingsPushing(true);
+                          setAppwriteSettingsProgress('Mengunggah pengaturan toko (logo, wa, banner) ke Appwrite...');
+                          const res = await appwriteService.saveStoreSettings(settings.appwriteConfig, settings);
+                          setAppwriteSettingsPushing(false);
+                          if (res.success) {
+                            showSuccessFeedback('Pengaturan Toko (Logo, WA, Nama Toko, Banner) berhasil diunggah ke Appwrite!');
+                            setAppwriteSettingsProgress('Selesai! Pengaturan toko berhasil tersimpan di Appwrite Cloud.');
+                          } else {
+                            setAppwriteSettingsProgress(`Gagal: ${res.error}`);
+                          }
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <Upload className="w-4 h-4" />
+                        {appwriteSettingsPushing ? 'Mengunggah Pengaturan...' : 'Unggah Pengaturan Toko ke Appwrite'}
+                      </button>
+
+                      <button
+                        type="button"
+                        disabled={appwriteSettingsPulling}
+                        onClick={async () => {
+                          setAppwriteSettingsPulling(true);
+                          try {
+                            const res = await appwriteService.fetchStoreSettings(settings.appwriteConfig, true);
+                            if (res.success && res.settings) {
+                              storage.saveSettings(res.settings);
+                              setSettings(res.settings);
+                              onDataUpdated();
+                              showSuccessFeedback('Pengaturan Toko berhasil ditarik dari Appwrite!');
+                              setAppwriteSettingsProgress('Selesai! Pengaturan toko diperbarui dari Cloud.');
+                            } else {
+                              setAppwriteSettingsProgress(`Gagal: ${res.error || 'Dokumen belum ada di Appwrite'}`);
+                            }
+                          } catch (err: any) {
+                            setAppwriteSettingsProgress(`Gagal: ${err.message}`);
+                          } finally {
+                            setAppwriteSettingsPulling(false);
+                          }
+                        }}
+                        className="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-bold flex items-center gap-2 disabled:opacity-50"
+                      >
+                        <Download className="w-4 h-4" />
+                        {appwriteSettingsPulling ? 'Menarik Pengaturan...' : 'Tarik Pengaturan Toko dari Appwrite'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Push & Pull Actions Products */}
                   <div className="p-5 rounded-2xl bg-slate-800 border border-slate-700 space-y-4">
                     <h3 className="font-bold text-white text-sm flex items-center gap-2">
                       <RefreshCw className="w-4 h-4 text-sky-400" />
@@ -4905,7 +4995,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                         onClick={async () => {
                           setAppwritePulling(true);
                           try {
-                            const res = await appwriteService.fetchAllProducts(settings.appwriteConfig);
+                            const res = await appwriteService.fetchAllProducts(settings.appwriteConfig, true);
                             if (res.success && res.products && res.products.length > 0) {
                               storage.saveProducts(res.products);
                               setProducts(res.products);

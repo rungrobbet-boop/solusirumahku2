@@ -22,6 +22,9 @@ interface CategoryProductViewProps {
   onSelectProduct: (product: Product) => void;
   onAddToCart: (product: Product, e?: React.MouseEvent) => void;
   initialSearchQuery?: string;
+  hasMoreProducts?: boolean;
+  isLoadingMore?: boolean;
+  onLoadMoreProducts?: () => void;
 }
 
 export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
@@ -33,6 +36,9 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
   onSelectProduct,
   onAddToCart,
   initialSearchQuery = '',
+  hasMoreProducts = false,
+  isLoadingMore = false,
+  onLoadMoreProducts,
 }) => {
   const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
@@ -290,7 +296,7 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
             ))}
           </div>
 
-          {/* Lihat Semua Button (Limit 10 by default) */}
+          {/* Lihat Semua Button (Limit 10 by default for local items) */}
           {filteredProducts.length > 10 && (
             <div className="flex items-center justify-center pt-2">
               <button
@@ -301,7 +307,28 @@ export const CategoryProductView: React.FC<CategoryProductViewProps> = ({
                 {showAllProducts ? (
                   <span>Tampilkan 10 Produk Saja</span>
                 ) : (
-                  <span>Lihat Semua ({filteredProducts.length} Produk) &rarr;</span>
+                  <span>Lihat Semua ({filteredProducts.length} Produk Lokal) &rarr;</span>
+                )}
+              </button>
+            </div>
+          )}
+
+          {/* Load More Next Page from Cloud (Cursor-Based Pagination) */}
+          {hasMoreProducts && onLoadMoreProducts && (
+            <div className="flex items-center justify-center pt-4">
+              <button
+                onClick={onLoadMoreProducts}
+                disabled={isLoadingMore}
+                className="px-8 py-3.5 rounded-2xl bg-[#064e3b] hover:bg-[#065f46] disabled:opacity-50 text-white text-xs sm:text-sm font-extrabold shadow-md active:scale-98 transition-all flex items-center gap-2"
+                id="btn-load-more-cloud"
+              >
+                {isLoadingMore ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Memuat 20 Produk Berikutnya...</span>
+                  </>
+                ) : (
+                  <span>Muat 20 Produk Berikutnya (Appwrite) &rarr;</span>
                 )}
               </button>
             </div>

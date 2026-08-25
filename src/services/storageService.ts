@@ -303,10 +303,7 @@ class StorageService {
       appwriteConfig: {
         endpoint: rawAppwrite.endpoint?.trim() || INITIAL_STORE_SETTINGS.appwriteConfig.endpoint,
         projectId:
-          rawAppwrite.projectId &&
-          rawAppwrite.projectId.trim() &&
-          rawAppwrite.projectId !== 'solusi-rumahku-app' &&
-          rawAppwrite.projectId !== 'your-project-id'
+          rawAppwrite.projectId && rawAppwrite.projectId.trim()
             ? rawAppwrite.projectId.trim()
             : INITIAL_STORE_SETTINGS.appwriteConfig.projectId,
         databaseId:

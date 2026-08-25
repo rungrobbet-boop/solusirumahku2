@@ -113,7 +113,7 @@ export const INITIAL_CATEGORIES: CategoryItem[] = [
 
 export const INITIAL_BRANDS: BrandItem[] = [
   { id: 'b-philips', name: 'Philips', description: 'Pionir pencahayaan LED global hemat energi' },
-  { id: 'b-panasonic', name: 'Panasonic', description: 'Solusi saklar, stop kontak, dan elektrikal Jepang terpercaya' },
+  { id: 'b-panasonic', name: 'Panasonic', description: 'solusi saklar, stop kontak, dan elektrikal Jepang terpercaya' },
   { id: 'b-schneider', name: 'Schneider Electric', description: 'Perangkat proteksi MCB dan instalasi listrik premium' },
   { id: 'b-bosch', name: 'Bosch', description: 'Mesin perkakas teknik dan listrik kelas profesional' },
   { id: 'b-makita', name: 'Makita', description: 'Perkakas bertenaga dan cordless performa tinggi' },
@@ -795,10 +795,10 @@ Banyak orang terbiasa mengukur terang lampu dari watt-nya. Padahal, Watt adalah 
 3. Perhatikan Indeks Sesuaian Warna (CRI)
 Pilihlah lampu LED dengan CRI di atas 80 agar warna perabot, cat dinding, dan makanan di meja terlihat natural dan hidup sebagaimana mestinya.
 
-Solusi Rumahku menyediakan beragam pilihan lampu LED bergaransi resmi dari merek terkemuka seperti Philips dan Panasonic yang siap memenuhi kebutuhan pencahayaan rumah Anda!`,
+solusi Rumahku menyediakan beragam pilihan lampu LED bergaransi resmi dari merek terkemuka seperti Philips dan Panasonic yang siap memenuhi kebutuhan pencahayaan rumah Anda!`,
     imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&auto=format&fit=crop&q=80',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    author: 'Tim Teknisi Solusi Rumahku',
+    author: 'Tim Teknisi solusi Rumahku',
     date: '2026-08-20',
     tags: ['Lampu LED', 'Philips', 'Hemat Listrik', 'Tips Rumah'],
     views: 1420,
@@ -828,10 +828,10 @@ Digunakan untuk menjepit, memotong kawat kawat, dan mengupas kulit kabel dengan 
 5. Mesin Gerinda Tangan 4 Inch
 Untuk memotong pipa PVC, besi hollow, keramik, maupun menghaluskan sambungan las dan sudut kayu kasar.
 
-Dapatkan seluruh set perkakas kualitas prima ini dengan harga terbaik di Toko Solusi Rumahku!`,
+Dapatkan seluruh set perkakas kualitas prima ini dengan harga terbaik di Toko solusi Rumahku!`,
     imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Admin Teknik Solusi Rumahku',
+    author: 'Admin Teknik solusi Rumahku',
     date: '2026-08-18',
     tags: ['Perkakas Listrik', 'Mesin Bor', 'Bosch', 'Makita', 'Tips Teknik'],
     views: 980,
@@ -851,7 +851,7 @@ Langkah Penting Menjaga Keamanan Instalasi Listrik:
 - Pasang ELCB / RCBO untuk Perlindungan Kebocoran Listrik: Selain MCB untuk beban lebih, pasanglah pemutus arus sisa untuk melindungi anggota keluarga dari sengatan listrik fatal di area basah seperti kamar mandi.`,
     imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Tim Teknisi Solusi Rumahku',
+    author: 'Tim Teknisi solusi Rumahku',
     date: '2026-08-15',
     tags: ['Keamanan Listrik', 'Schneider', 'Panasonic', 'MCB'],
     views: 1850,
@@ -871,7 +871,7 @@ Fitur Unggulan Lampu Pintar Masa Kini:
 - Kendali Jarak Jauh via Smartphone: Memastikan tidak ada lampu yang tertinggal menyala saat Anda sudah meninggalkan rumah.`,
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Editor Info Solusi Rumahku',
+    author: 'Editor Info solusi Rumahku',
     date: '2026-08-12',
     tags: ['Smart Home', 'WiZ', 'Otomatisasi', 'Tren 2026'],
     views: 1120,
@@ -891,7 +891,7 @@ Panduan Mengenali Jenis Mata Bor:
 4. Mata Bor Kaca & Keramik (Spear Head / Diamond Hole Saw): Berbentuk mata tombak atau silinder berlapis serbuk intan, digunakan dengan putaran lambat dan diberi pelumas air agar kaca tidak retak pecah.`,
     imageUrl: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Tim Teknisi Solusi Rumahku',
+    author: 'Tim Teknisi solusi Rumahku',
     date: '2026-08-10',
     tags: ['Mata Bor', 'Tips Tukang', 'Perkakas Teknik'],
     views: 870,
@@ -911,7 +911,7 @@ Mengapa Memilih Stainless Steel SUS 304?
 - Mudah Dibersihkan: Cukup dilap dengan kain microfiber dan sabun lembut tanpa memerlukan cairan pembersih kimia keras.`,
     imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Admin Solusi Rumahku',
+    author: 'Admin solusi Rumahku',
     date: '2026-08-08',
     tags: ['Dapur', 'Kamar Mandi', 'Stainless 304', 'Kran Air'],
     views: 940,
@@ -921,7 +921,7 @@ Mengapa Memilih Stainless Steel SUS 304?
 export const INITIAL_GALLERY_MEDIA: GalleryMediaItem[] = [
   {
     id: 'gal-1',
-    title: 'Showroom Utama Solusi Rumahku',
+    title: 'Showroom Utama solusi Rumahku',
     type: 'image',
     mediaUrl: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
     backgroundUrl: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=1600&auto=format&fit=crop&q=80',
@@ -991,7 +991,7 @@ export const INITIAL_GALLERY_MEDIA: GalleryMediaItem[] = [
   },
   {
     id: 'gal-8',
-    title: 'Aksesoris Serbaguna & Solusi Rekat 3M',
+    title: 'Aksesoris Serbaguna & solusi Rekat 3M',
     type: 'image',
     mediaUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=800&auto=format&fit=crop&q=80',
     backgroundUrl: 'https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=1600&auto=format&fit=crop&q=80',
@@ -1050,10 +1050,10 @@ export const INITIAL_CUSTOM_FEATURES: CustomManualFeature[] = [
 ];
 
 export const INITIAL_STORE_SETTINGS: StoreSettings = {
-  storeName: 'Solusi Rumahku',
+  storeName: 'solusi Rumahku',
   tagline: 'Toko Online Peralatan Listrik, Kerja Tehnik, dan Perlengkapan Rumah Tangga',
   phoneWhatsApp: '6281234567890',
-  contextAbout: 'Solusi Rumahku hadir sebagai one-stop center terpercaya bagi pemilik rumah, teknisi kelistrikan, kontraktor renovasi, tukang bangunan, dan komunitas DIY di seluruh Indonesia. Tujuan kami adalah menyediakan produk peralatan listrik, perkakas teknik, dan perlengkapan rumah tangga original dengan harga bersaing, informasi stok transparan, serta kemudahan pemesanan cepat langsung terhubung ke WhatsApp toko kami.',
+  contextAbout: 'solusi Rumahku hadir sebagai one-stop center terpercaya bagi pemilik rumah, teknisi kelistrikan, kontraktor renovasi, tukang bangunan, dan komunitas DIY di seluruh Indonesia. Tujuan kami adalah menyediakan produk peralatan listrik, perkakas teknik, dan perlengkapan rumah tangga original dengan harga bersaing, informasi stok transparan, serta kemudahan pemesanan cepat langsung terhubung ke WhatsApp toko kami.',
   address: 'Jl. Raya Teknik Utama No. 88, Kawasan Pertokoan Niaga, Jakarta / Seluruh Indonesia',
   city: 'Jakarta & Pengiriman Seluruh Indonesia',
   businessHours: 'Senin - Sabtu: 08.00 - 17.30 WIB | Minggu: 09.00 - 15.00 WIB',
@@ -1066,16 +1066,16 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
 
   // Default Logo & Branding
   customLogoUrl: '',
-  logoTextPrefix: 'SOLUSI',
+  logoTextPrefix: 'solusi',
   logoTextSuffix: 'RUMAHKU',
 
   // Default Top Announcement
   topAnnouncementBadge: 'Resmi & Terpercaya',
-  topAnnouncementText: 'Solusi Rumahku • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI',
+  topAnnouncementText: 'solusi Rumahku • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI',
 
   // Default Hero Banner (Halaman Utama)
   heroBadge: 'Distributor Resmi & Garansi SNI',
-  heroTitle: 'Solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga',
+  heroTitle: 'solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga',
   heroSubtitle: 'Pilihan terbaik lampu LED hemat energi, saklar, fitting, mesin bor, kabel berkualitas, hingga perlengkapan dapur & kamar mandi siap kirim ke seluruh Indonesia.',
   heroMediaType: 'gradient',
   heroMediaUrl: '',
@@ -1098,7 +1098,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
     'Same-Day & Instant Delivery (GoSend/Grab) untuk area terjangkau',
     'Pemberian nomor resi dan tracking langsung dikonfirmasi ke WhatsApp Anda',
   ],
-  shippingFooterNote: 'Solusi Rumahku • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)',
+  shippingFooterNote: 'solusi Rumahku • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)',
 
   // Default Pengaturan Footer / Bawah Halaman Beranda
   footerLogoSize: 'md',
