@@ -512,7 +512,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-bold text-white leading-tight">
-                  Akses Admin • Solusi Rumahku
+                  Akses Admin • SST CATALOG
                 </h2>
                 {currentAdmin && (
                   <span className="text-[10px] uppercase font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-md">
@@ -1251,7 +1251,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           value={settings.storeName}
                           onChange={(e) => setSettings({ ...settings, storeName: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-semibold"
-                          placeholder="Solusi Rumahku"
+                          placeholder="SST CATALOG"
                         />
                       </div>
 
@@ -1277,7 +1277,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           value={settings.logoTextPrefix || ''}
                           onChange={(e) => setSettings({ ...settings, logoTextPrefix: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white font-bold"
-                          placeholder="SOLUSI"
+                          placeholder="SST"
                         />
                       </div>
 
@@ -1290,7 +1290,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           value={settings.logoTextSuffix || ''}
                           onChange={(e) => setSettings({ ...settings, logoTextSuffix: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-emerald-400 font-bold"
-                          placeholder="RUMAHKU"
+                          placeholder="CATALOG"
                         />
                       </div>
 
@@ -1337,7 +1337,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           value={settings.topAnnouncementText || ''}
                           onChange={(e) => setSettings({ ...settings, topAnnouncementText: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
-                          placeholder="Solusi Rumahku • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI"
+                          placeholder="SST CATALOG • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI"
                         />
                       </div>
                     </div>
@@ -3716,7 +3716,7 @@ export const AdminModal: React.FC<AdminModalProps> = ({
                           value={settings.shippingFooterNote || ''}
                           onChange={(e) => setSettings({ ...settings, shippingFooterNote: e.target.value })}
                           className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs"
-                          placeholder="Solusi Rumahku • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)"
+                          placeholder="SST CATALOG • Mitra Proyek &amp; Rumah Idaman (Terpercaya &amp; Bergaransi)"
                         />
                       </div>
                     </div>

@@ -795,10 +795,10 @@ Banyak orang terbiasa mengukur terang lampu dari watt-nya. Padahal, Watt adalah 
 3. Perhatikan Indeks Sesuaian Warna (CRI)
 Pilihlah lampu LED dengan CRI di atas 80 agar warna perabot, cat dinding, dan makanan di meja terlihat natural dan hidup sebagaimana mestinya.
 
-solusi Rumahku menyediakan beragam pilihan lampu LED bergaransi resmi dari merek terkemuka seperti Philips dan Panasonic yang siap memenuhi kebutuhan pencahayaan rumah Anda!`,
+SST CATALOG menyediakan beragam pilihan lampu LED bergaransi resmi dari merek terkemuka seperti Philips dan Panasonic yang siap memenuhi kebutuhan pencahayaan rumah Anda!`,
     imageUrl: 'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=800&auto=format&fit=crop&q=80',
     videoUrl: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-    author: 'Tim Teknisi solusi Rumahku',
+    author: 'Tim Teknisi SST CATALOG',
     date: '2026-08-20',
     tags: ['Lampu LED', 'Philips', 'Hemat Listrik', 'Tips Rumah'],
     views: 1420,
@@ -828,10 +828,10 @@ Digunakan untuk menjepit, memotong kawat kawat, dan mengupas kulit kabel dengan 
 5. Mesin Gerinda Tangan 4 Inch
 Untuk memotong pipa PVC, besi hollow, keramik, maupun menghaluskan sambungan las dan sudut kayu kasar.
 
-Dapatkan seluruh set perkakas kualitas prima ini dengan harga terbaik di Toko solusi Rumahku!`,
+Dapatkan seluruh set perkakas kualitas prima ini dengan harga terbaik di Toko SST CATALOG!`,
     imageUrl: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Admin Teknik solusi Rumahku',
+    author: 'Admin Teknik SST CATALOG',
     date: '2026-08-18',
     tags: ['Perkakas Listrik', 'Mesin Bor', 'Bosch', 'Makita', 'Tips Teknik'],
     views: 980,
@@ -851,7 +851,7 @@ Langkah Penting Menjaga Keamanan Instalasi Listrik:
 - Pasang ELCB / RCBO untuk Perlindungan Kebocoran Listrik: Selain MCB untuk beban lebih, pasanglah pemutus arus sisa untuk melindungi anggota keluarga dari sengatan listrik fatal di area basah seperti kamar mandi.`,
     imageUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Tim Teknisi solusi Rumahku',
+    author: 'Tim Teknisi SST CATALOG',
     date: '2026-08-15',
     tags: ['Keamanan Listrik', 'Schneider', 'Panasonic', 'MCB'],
     views: 1850,
@@ -871,7 +871,7 @@ Fitur Unggulan Lampu Pintar Masa Kini:
 - Kendali Jarak Jauh via Smartphone: Memastikan tidak ada lampu yang tertinggal menyala saat Anda sudah meninggalkan rumah.`,
     imageUrl: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Editor Info solusi Rumahku',
+    author: 'Editor Info SST CATALOG',
     date: '2026-08-12',
     tags: ['Smart Home', 'WiZ', 'Otomatisasi', 'Tren 2026'],
     views: 1120,
@@ -891,7 +891,7 @@ Panduan Mengenali Jenis Mata Bor:
 4. Mata Bor Kaca & Keramik (Spear Head / Diamond Hole Saw): Berbentuk mata tombak atau silinder berlapis serbuk intan, digunakan dengan putaran lambat dan diberi pelumas air agar kaca tidak retak pecah.`,
     imageUrl: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Tim Teknisi solusi Rumahku',
+    author: 'Tim Teknisi SST CATALOG',
     date: '2026-08-10',
     tags: ['Mata Bor', 'Tips Tukang', 'Perkakas Teknik'],
     views: 870,
@@ -905,13 +905,13 @@ Panduan Mengenali Jenis Mata Bor:
     content: `Area dapur dan kamar mandi memiliki kelembapan tinggi dan paparan air secara terus-menerus. Memilih fitting sanitari yang salah seringkali berujung pada karat, endapan kerak kapur, dan kebocoran kran dalam beberapa bulan saja.
 
 Mengapa Memilih Stainless Steel SUS 304?
-- Bebas Timbal (Lead-Free): Lebih aman untuk air minum dan mencuci bahan makanan keluarga.
+- Bebas Timbal (Lead-Free): Lebih memadai untuk air minum dan mencuci bahan makanan keluarga.
 - Tahan Oksidasi Karat: Mengandung minimal 18% kromium dan 8% nikel yang membentuk lapisan pasif pelindung terhadap korosi air sumur maupun air PDAM.
 - Jantung Valve Keramik: Menutup aliran air dengan rapat dan tidak mudah aus meskipun dibuka-tutup hingga 500.000 kali.
 - Mudah Dibersihkan: Cukup dilap dengan kain microfiber dan sabun lembut tanpa memerlukan cairan pembersih kimia keras.`,
     imageUrl: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=800&auto=format&fit=crop&q=80',
     videoUrl: '',
-    author: 'Admin solusi Rumahku',
+    author: 'Admin SST CATALOG',
     date: '2026-08-08',
     tags: ['Dapur', 'Kamar Mandi', 'Stainless 304', 'Kran Air'],
     views: 940,
@@ -921,7 +921,7 @@ Mengapa Memilih Stainless Steel SUS 304?
 export const INITIAL_GALLERY_MEDIA: GalleryMediaItem[] = [
   {
     id: 'gal-1',
-    title: 'Showroom Utama solusi Rumahku',
+    title: 'Showroom Utama SST CATALOG',
     type: 'image',
     mediaUrl: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=800&auto=format&fit=crop&q=80',
     backgroundUrl: 'https://images.unsplash.com/photo-1581783342308-f792dbdd27c5?w=1600&auto=format&fit=crop&q=80',
@@ -1050,32 +1050,32 @@ export const INITIAL_CUSTOM_FEATURES: CustomManualFeature[] = [
 ];
 
 export const INITIAL_STORE_SETTINGS: StoreSettings = {
-  storeName: 'solusi Rumahku',
-  tagline: 'Toko Online Peralatan Listrik, Kerja Tehnik, dan Perlengkapan Rumah Tangga',
+  storeName: 'SST CATALOG',
+  tagline: 'Toko Online Peralatan Listrik, Kerja Teknik, dan Perlengkapan Rumah Tangga',
   phoneWhatsApp: '6281234567890',
-  contextAbout: 'solusi Rumahku hadir sebagai one-stop center terpercaya bagi pemilik rumah, teknisi kelistrikan, kontraktor renovasi, tukang bangunan, dan komunitas DIY di seluruh Indonesia. Tujuan kami adalah menyediakan produk peralatan listrik, perkakas teknik, dan perlengkapan rumah tangga original dengan harga bersaing, informasi stok transparan, serta kemudahan pemesanan cepat langsung terhubung ke WhatsApp toko kami.',
+  contextAbout: 'SST CATALOG hadir sebagai one-stop center terpercaya bagi pemilik rumah, teknisi kelistrikan, kontraktor renovasi, tukang bangunan, dan komunitas DIY di seluruh Indonesia. Tujuan kami adalah menyediakan produk peralatan listrik, perkakas teknik, dan perlengkapan rumah tangga original dengan harga bersaing, informasi stok transparan, serta kemudahan pemesanan cepat langsung terhubung ke WhatsApp toko kami.',
   address: 'Jl. Raya Teknik Utama No. 88, Kawasan Pertokoan Niaga, Jakarta / Seluruh Indonesia',
   city: 'Jakarta & Pengiriman Seluruh Indonesia',
   businessHours: 'Senin - Sabtu: 08.00 - 17.30 WIB | Minggu: 09.00 - 15.00 WIB',
-  email: 'solusirumahku.official@gmail.com',
-  instagramUrl: 'https://instagram.com/solusirumahku',
-  facebookUrl: 'https://facebook.com/solusirumahku',
-  tiktokUrl: 'https://tiktok.com/@solusirumahku',
+  email: 'sstcatalog.official@gmail.com',
+  instagramUrl: 'https://instagram.com/sstcatalog',
+  facebookUrl: 'https://facebook.com/sstcatalog',
+  tiktokUrl: 'https://tiktok.com/@sstcatalog',
   lowStockThreshold: 20,
   operationalDays: 'Senin - Sabtu (Kecuali Hari Libur Nasional)',
 
-  // Default Logo & Branding
+  // Default Logo & Branding (SST Monogram Vector)
   customLogoUrl: '',
-  logoTextPrefix: 'solusi',
-  logoTextSuffix: 'RUMAHKU',
+  logoTextPrefix: 'SST',
+  logoTextSuffix: 'CATALOG',
 
   // Default Top Announcement
   topAnnouncementBadge: 'Resmi & Terpercaya',
-  topAnnouncementText: 'solusi Rumahku • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI',
+  topAnnouncementText: 'SST CATALOG • Pusat Peralatan Listrik, Kerja Teknik & Rumah Tangga SNI',
 
   // Default Hero Banner (Halaman Utama)
   heroBadge: 'Distributor Resmi & Garansi SNI',
-  heroTitle: 'solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga',
+  heroTitle: 'Solusi Terlengkap Alat Listrik, Perkakas Teknik & Rumah Tangga',
   heroSubtitle: 'Pilihan terbaik lampu LED hemat energi, saklar, fitting, mesin bor, kabel berkualitas, hingga perlengkapan dapur & kamar mandi siap kirim ke seluruh Indonesia.',
   heroMediaType: 'gradient',
   heroMediaUrl: '',
@@ -1098,7 +1098,7 @@ export const INITIAL_STORE_SETTINGS: StoreSettings = {
     'Same-Day & Instant Delivery (GoSend/Grab) untuk area terjangkau',
     'Pemberian nomor resi dan tracking langsung dikonfirmasi ke WhatsApp Anda',
   ],
-  shippingFooterNote: 'solusi Rumahku • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)',
+  shippingFooterNote: 'SST CATALOG • Mitra Proyek & Rumah Idaman (Terpercaya & Bergaransi)',
 
   // Default Pengaturan Footer / Bawah Halaman Beranda
   footerLogoSize: 'md',

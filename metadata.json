@@ -1,6 +1,6 @@
 {
-  "name": "Solusi Rumahku",
-  "description": "Toko Online Peralatan Listrik, Kerja Tehnik, dan Perlengkapan Rumah Tangga Terlengkap dengan integrasi katalog, keranjang pesanan WhatsApp, artikel Info & Trend, dan Dashboard Admin interaktif.",
+  "name": "SST CATALOG",
+  "description": "SST CATALOG - Toko Online Peralatan Listrik, Kerja Teknik, dan Perlengkapan Rumah Tangga Terlengkap dengan integrasi katalog, keranjang pesanan WhatsApp, artikel Info & Trend, dan Dashboard Admin interaktif.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -48,7 +48,7 @@ export const AndroidPreviewModal: React.FC<AndroidPreviewModalProps> = ({
         <div className="w-full h-[620px] rounded-[32px] overflow-hidden bg-slate-50 relative flex flex-col border border-slate-800">
           <iframe
             src={window.location.href}
-            title="Solusi Rumahku Android Preview"
+            title="SST CATALOG Android Preview"
             className="w-full h-full border-none"
           />
         </div>

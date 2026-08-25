@@ -87,92 +87,89 @@ export const Logo: React.FC<LogoProps> = ({
             xmlns="http://www.w3.org/2000/svg"
             className="w-full h-full drop-shadow-xs"
           >
-            {/* Outer circle border */}
-            <circle cx="80" cy="80" r="74" stroke="#22c55e" strokeWidth="2.5" strokeOpacity="0.5" fill="#fcfdfd" />
-            <circle cx="80" cy="80" r="70" stroke="#044e42" strokeWidth="1.5" strokeOpacity="0.8" fill="white" />
+            {/* Background subtle sheen */}
+            <rect width="160" height="160" rx="28" fill="#ffffff" />
+            <rect x="2" y="2" width="156" height="156" rx="26" stroke="#065f46" strokeWidth="1" strokeOpacity="0.08" />
 
-            {/* House Structure */}
-            {/* Chimney */}
+            {/* Letter 1: S (Dual Line Monogram) */}
+            {/* Line 1 S1 */}
             <path
-              d="M 96 46 L 96 66 L 88 60 L 88 46 Z"
-              fill="#0b463a"
-            />
-            {/* Chimney Cap */}
-            <rect x="85" y="44" width="14" height="4" rx="1.5" fill="#0b463a" />
-
-            {/* House Roof & Body */}
-            <path
-              d="M 80 44 L 118 76 L 112 76 L 112 110 L 48 110 L 48 76 L 42 76 Z"
-              fill="#0f5145"
-              stroke="#09382f"
-              strokeWidth="3.5"
-              strokeLinejoin="round"
-            />
-
-            {/* House Glowing Inner Space */}
-            <path
-              d="M 80 50 L 108 75 L 106 106 L 54 106 L 54 75 Z"
-              fill="url(#houseInnerGlow)"
-            />
-
-            {/* Door / Entrance */}
-            <path
-              d="M 70 82 Q 80 77 90 82 L 90 106 L 70 106 Z"
-              fill="#0a3c32"
-            />
-
-            {/* Sun / Light Ray inside house */}
-            <circle cx="78" cy="72" r="14" fill="#fbbf24" fillOpacity="0.4" />
-
-            {/* Dynamic Sprouting Fresh Leaves */}
-            {/* Big Leaf */}
-            <path
-              d="M 68 88 C 45 74 38 48 64 36 C 78 52 74 76 68 88 Z"
-              fill="url(#leafGradient1)"
-              stroke="#0b463a"
-              strokeWidth="2"
-              strokeLinejoin="round"
-            />
-            {/* Leaf vein 1 */}
-            <path
-              d="M 46 54 C 54 60 62 72 68 88"
-              stroke="#ffffff"
-              strokeWidth="1.5"
+              d="M 52 46 C 48 37 38 35 30 35 C 19 35 14 43 14 53 C 14 65 26 71 36 76 C 48 82 54 89 54 103 C 54 116 44 125 31 125 C 19 125 14 116 14 107"
+              stroke="url(#sstGoldGrad1)"
+              strokeWidth="4"
               strokeLinecap="round"
-              strokeOpacity="0.7"
+              strokeLinejoin="round"
+            />
+            {/* Line 2 S1 */}
+            <path
+              d="M 52 57 C 49 50 42 46 32 46 C 24 46 22 50 22 54 C 22 61 30 65 39 69 C 52 75 62 83 62 100 C 62 113 54 125 40 125 C 29 125 24 118 24 113"
+              stroke="url(#sstGoldGrad2)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
 
-            {/* Small Top Leaf */}
+            {/* Letter 2: S (Dual Line Monogram) */}
+            {/* Line 1 S2 */}
             <path
-              d="M 62 46 C 52 38 52 26 64 22 C 70 30 68 40 62 46 Z"
-              fill="url(#leafGradient2)"
-              stroke="#0b463a"
-              strokeWidth="1.5"
+              d="M 94 46 C 90 37 80 35 72 35 C 61 35 56 43 56 53 C 56 65 68 71 78 76 C 90 82 96 89 96 103 C 96 116 86 125 73 125 C 61 125 56 116 56 107"
+              stroke="url(#sstGoldGrad1)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Line 2 S2 */}
+            <path
+              d="M 94 57 C 91 50 84 46 74 46 C 66 46 64 50 64 54 C 64 61 72 65 81 69 C 94 75 104 83 104 100 C 104 113 96 125 82 125 C 71 125 66 118 66 113"
+              stroke="url(#sstGoldGrad2)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
 
-            {/* Organic Leaf Stem wrapping around */}
+            {/* Letter 3: T (Dual Line Monogram) */}
+            {/* Top Bar Line 1 */}
             <path
-              d="M 68 88 C 66 98 56 106 48 108 C 42 109 38 112 44 116 C 52 118 64 114 70 104 C 74 96 72 90 68 88 Z"
-              fill="#15803d"
+              d="M 104 35 L 148 35"
+              stroke="url(#sstGoldGrad1)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* Top Bar Line 2 */}
+            <path
+              d="M 106 46 L 146 46"
+              stroke="url(#sstGoldGrad2)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* Vertical Stem Line 1 */}
+            <path
+              d="M 121 46 L 121 125"
+              stroke="url(#sstGoldGrad1)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            {/* Vertical Stem Line 2 */}
+            <path
+              d="M 131 46 L 131 125"
+              stroke="url(#sstGoldGrad2)"
+              strokeWidth="4"
+              strokeLinecap="round"
             />
 
             {/* Gradients */}
             <defs>
-              <linearGradient id="houseInnerGlow" x1="60" y1="50" x2="100" y2="110" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#fef3c7" />
-                <stop offset="50%" stopColor="#fde68a" />
-                <stop offset="100%" stopColor="#f59e0b" />
+              <linearGradient id="sstGoldGrad1" x1="14" y1="35" x2="148" y2="125" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#dfb2a1" />
+                <stop offset="30%" stopColor="#c58d78" />
+                <stop offset="70%" stopColor="#8d5644" />
+                <stop offset="100%" stopColor="#b9806b" />
               </linearGradient>
-
-              <linearGradient id="leafGradient1" x1="42" y1="40" x2="72" y2="88" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#4ade80" />
-                <stop offset="60%" stopColor="#22c55e" />
-                <stop offset="100%" stopColor="#15803d" />
-              </linearGradient>
-
-              <linearGradient id="leafGradient2" x1="54" y1="24" x2="68" y2="46" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stopColor="#86efac" />
-                <stop offset="100%" stopColor="#16a34a" />
+              <linearGradient id="sstGoldGrad2" x1="22" y1="46" x2="146" y2="125" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#edd0c4" />
+                <stop offset="40%" stopColor="#d59f8c" />
+                <stop offset="80%" stopColor="#7a4737" />
+                <stop offset="100%" stopColor="#ad735f" />
               </linearGradient>
             </defs>
           </svg>

@@ -116,7 +116,7 @@ export function generateWhatsAppOrderMessage(
     address?: string;
     notes?: string;
   },
-  storeName = 'Solusi Rumahku'
+  storeName = 'SST CATALOG'
 ): string {
   const cleanPhone = cleanPhoneNumber(phone);
   const totalEstimation = cartItems.reduce((acc, item) => {
@@ -168,7 +168,7 @@ export function generateWhatsAppSingleProductMessage(
   product: Product,
   quantity: number = 1,
   notes?: string,
-  storeName = 'Solusi Rumahku'
+  storeName = 'SST CATALOG'
 ): string {
   const cleanPhone = cleanPhoneNumber(phone);
   const price = product.discountPrice || product.price;

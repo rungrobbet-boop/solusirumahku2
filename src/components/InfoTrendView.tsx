@@ -71,7 +71,7 @@ export const InfoTrendView: React.FC<InfoTrendViewProps> = ({ articles, onSelect
             Wawasan & Edukasi Teknik
           </div>
           <h1 className="text-2xl sm:text-4xl font-black tracking-tight mb-2">
-            Info & Trend Solusi Rumahku
+            Info &amp; Trend SST CATALOG
           </h1>
           <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed mb-6">
             Panduan teknis, ulasan tren pencahayaan pintar, tips perawatan instalasi listrik, dan rekomendasi perkakas kerja teknik terbaik dari para teknisi berpengalaman.

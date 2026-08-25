@@ -359,6 +359,21 @@ class StorageService {
     if (typeof merged.lowStockThreshold !== 'number' || isNaN(merged.lowStockThreshold) || merged.lowStockThreshold <= 0) {
       merged.lowStockThreshold = 20;
     }
+
+    // Auto-migrate legacy cached placeholder store names
+    if (!merged.storeName || merged.storeName.toLowerCase() === 'solusi rumahku') {
+      merged.storeName = 'SST CATALOG';
+    }
+    if (!merged.logoTextPrefix || merged.logoTextPrefix.toLowerCase() === 'solusi') {
+      merged.logoTextPrefix = 'SST';
+    }
+    if (!merged.logoTextSuffix || merged.logoTextSuffix.toLowerCase() === 'rumahku') {
+      merged.logoTextSuffix = 'CATALOG';
+    }
+    if (merged.topAnnouncementText && merged.topAnnouncementText.includes('solusi Rumahku')) {
+      merged.topAnnouncementText = merged.topAnnouncementText.replace(/solusi Rumahku/gi, 'SST CATALOG');
+    }
+
     return merged;
   }
 
@@ -387,7 +402,7 @@ class StorageService {
       {
         id: 'admin-manager-1',
         username: 'admin',
-        fullName: 'Manager Solusi Rumahku',
+        fullName: 'Manager SST CATALOG',
         role: 'manager',
         createdAt: '2026-01-01T00:00:00Z',
       },
@@ -449,7 +464,7 @@ class StorageService {
     const newAdmin: AdminUser = {
       id: `admin-${Date.now()}`,
       username: username.trim(),
-      fullName: fullName.trim() || 'Manager Solusi Rumahku',
+      fullName: fullName.trim() || 'Manager SST CATALOG',
       role: 'manager',
       createdAt: new Date().toISOString(),
       lastLogin: new Date().toISOString(),
@@ -520,7 +535,7 @@ class StorageService {
     const created: AdminUser = {
       id: `admin-${Date.now()}`,
       username: newAdmin.username.trim(),
-      fullName: newAdmin.fullName.trim() || 'Admin Solusi Rumahku',
+      fullName: newAdmin.fullName.trim() || 'Admin SST CATALOG',
       role: newAdmin.role,
       permissions: newAdmin.permissions,
       createdAt: new Date().toISOString(),
